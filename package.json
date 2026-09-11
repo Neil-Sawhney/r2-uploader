@@ -15,7 +15,7 @@
     "build": "npm run build:setup && vite build",
     "preview": "vite preview --host 0.0.0.0 --port 7896",
     "deploy": "npm run build && npm run cf:deploy",
-    "cf:deploy": "wrangler deploy",
+    "cf:deploy": "wrangler deploy --assets=./dist",
     "deploy:vercel": "npm run build:setup && vercel --prod",
     "clean": "rm -rf dist",
     "verify:dist": "node scripts/verify-dist.mjs"

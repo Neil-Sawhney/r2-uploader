@@ -46,4 +46,4 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: f9b56530b83d8e3412943ccf1ea9057b
-          command: deploy
+          command: deploy --assets=./dist
