@@ -804,13 +804,6 @@ let removeThisFile = function (index, name) {
 
 const uploadedList = ref([]);
 const upload = async function () {
-  const endPoint = localStorage.getItem("endPoint");
-  const apiKey = localStorage.getItem("apiKey");
-  if (!endPoint || !apiKey) {
-    alert("Please set an endpoint and api key first.");
-    return;
-  }
-
   const slug = normalizeSlug(uploadShortName.value);
   if (slug) {
     const error = validateSlug(slug);
@@ -826,6 +819,13 @@ const upload = async function () {
       uploadShortNameHintKind.value = "error";
       return;
     }
+  }
+
+  const endPoint = localStorage.getItem("endPoint");
+  const apiKey = localStorage.getItem("apiKey");
+  if (!endPoint || !apiKey) {
+    alert("Please set an endpoint and api key first.");
+    return;
   }
 
   pendingUploadSlug = slug;
