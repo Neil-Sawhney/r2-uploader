@@ -1,14 +1,11 @@
-// bun file: gen_markdown.js
 // generate html from markdown, the html should be placed in the same directory as the markdown file
 
-import {marked} from 'marked'
-import fs from 'fs'
+import { marked } from 'marked'
+import fs from 'fs/promises'
 
-let baseDir = './public/setup-guide/'
-let files = fs.readdirSync(baseDir)
-let generate_list = files.filter(el => {
-  return el.endsWith('.md')
-})
+const baseDir = './public/setup-guide/'
+const files = await fs.readdir(baseDir)
+const generate_list = files.filter(el => el.endsWith('.md'))
 
 const html_template = `
 <!DOCTYPE html>
@@ -65,21 +62,17 @@ const html_template = `
 </html>
 `
 
-console.log();
+console.log()
 for (const path of generate_list) {
-  let start = Date.now()
-  let file = Bun.file(baseDir + path)
-  let md = await file.text()
-  let html = marked.parse(md)
+  const start = Date.now()
+  const md = await fs.readFile(baseDir + path, 'utf8')
+  const html = marked.parse(md)
 
-  let html_path = baseDir + path.replace('.md', '.html')
-  await Bun.write(html_path, html_template.replace('###HTML###', html))
+  const html_path = baseDir + path.replace('.md', '.html')
+  await fs.writeFile(html_path, html_template.replace('###HTML###', html), 'utf8')
 
-  let end = Date.now()
+  const end = Date.now()
 
   console.log(`Generated ${html_path} in ${end - start}ms`)
 }
-console.log();
-
-
-
+console.log()
