@@ -1,0 +1,19 @@
+{
+  "$schema": "https://unpkg.com/wrangler@4/config-schema.json",
+  // Static Vite SPA for Cloudflare Workers + Assets / Pages.
+  // Do not add a Hello-World `main` worker — that is what wormhole.neilneilneil.com
+  // is currently serving (text/plain "Hello world") instead of this app.
+  "name": "r2-uploader",
+  "compatibility_date": "2026-09-11",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "./cloudflare/worker.js",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  "build": {
+    "command": "npm run build"
+  }
+}

@@ -6,10 +6,13 @@ export const config = {
 
 import D1 from '../utils/d1.class.js'
 import { _res } from '../utils/response.js'
+import { envVar } from '../utils/runtime-env.js'
 
-const d1 = new D1({
-  key: process.env.D1_KEY
-})
+function getD1() {
+  return new D1({
+    key: envVar('D1_KEY')
+  })
+}
 
 export default async function (req) {
   let token = req.headers.get('Authorization')
@@ -36,7 +39,7 @@ export default async function (req) {
 
   let user_json = await user.json()
 
-  let {success, results, error} = await d1.query('select * from configs where username = ?', [user_json.login])
+  let {success, results, error} = await getD1().query('select * from configs where username = ?', [user_json.login])
 
   if (error) {
     return _res.json({

@@ -4,6 +4,8 @@ export const config = {
   runtime: 'edge',
 }
 
+import { envVar } from '../utils/runtime-env.js'
+
 export default async function (req) {
   let requestUrl = new URL(req.url)
   let query = requestUrl.searchParams
@@ -44,8 +46,8 @@ export default async function (req) {
         'Accept': 'application/json'
       },
       body: JSON.stringify({
-        client_id: process.env.GITHUB_CLIENT_ID,
-        client_secret: process.env.GITHUB_CLIENT_SECRET,
+        client_id: envVar('GITHUB_CLIENT_ID'),
+        client_secret: envVar('GITHUB_CLIENT_SECRET'),
         code: code
       })
     })

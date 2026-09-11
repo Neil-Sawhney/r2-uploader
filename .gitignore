@@ -27,3 +27,7 @@ setup-guide/*.html
 public/setup-guide/*.html
 
 .env
+.dev.vars
+.wrangler
+.wrangler/
+
