@@ -427,6 +427,13 @@ const shortNameOrigin = computed(() => {
   }
 });
 
+watch(uploadShortName, () => {
+  if (uploadShortNameHintKind.value === "error") {
+    uploadShortNameHint.value = "";
+    uploadShortNameHintKind.value = "";
+  }
+});
+
 let uploadedPublicUrl = function (file) {
   const key = renameFileWithRandomId.value ? file.id_key : file.key;
   return filePublicUrl(formatFileName(key));
@@ -820,6 +827,9 @@ const upload = async function () {
       return;
     }
   }
+
+  uploadShortNameHint.value = "";
+  uploadShortNameHintKind.value = "";
 
   const endPoint = localStorage.getItem("endPoint");
   const apiKey = localStorage.getItem("apiKey");
