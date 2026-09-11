@@ -1,4 +1,4 @@
-# Deploying R2 Uploader on Cloudflare Workers
+# Deploying NEILS WORMHOLE on Cloudflare Workers
 
 This fork is a Vue + Vite SPA. Upstream (`jw-12138/r2-uploader`) is built with Bun and deployed to Vercel. This fork builds with **Node + npm**.
 
@@ -7,7 +7,7 @@ Live targets:
 - https://wormhole.neilneilneil.com
 - https://r2-uploader.neil-f9b.workers.dev
 
-Both must return `text/html` **R2 Uploader** (same UX as https://r2.jw1.dev/), not `text/plain` `Hello world`.
+Both must return `text/html` **NEILS WORMHOLE**, not `text/plain` `Hello world`.
 
 ## Why commit `4c9984b` can be the active deployment and still serve Hello World
 
@@ -53,7 +53,7 @@ npm run preview          # http://localhost:7896
 npx wrangler dev         # Worker + assets
 ```
 
-`dist/index.html` must contain `R2 Uploader` and a `/assets/*.js` bundle, never `Hello world`.
+`dist/index.html` must contain `NEILS WORMHOLE` and a `/assets/*.js` bundle, never `Hello world`.
 
 ## Dashboard settings (required)
 
@@ -86,7 +86,7 @@ curl -s https://r2-uploader.neil-f9b.workers.dev | grep -o '<title>.*</title>'
 curl -sI https://wormhole.neilneilneil.com | grep -i content-type
 ```
 
-Expect `text/html` and `<title>R2 Uploader</title>`.
+Expect `text/html` and `<title>NEILS WORMHOLE</title>`.
 
 ## Force-deploy from GitHub (needs a token)
 

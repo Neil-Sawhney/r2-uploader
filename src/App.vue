@@ -1,27 +1,23 @@
 <template>
-  <h1 class="max-w-[30rem] mx-auto">
-    <img src="https://emojicdn.elk.sh/🗄️" alt="logo" class="h-[1.5rem]"> R2 Uploader
-  </h1>
+  <div class="app-shell">
+    <header class="app-header">
+      <h1 class="wordmark">NEILS WORMHOLE</h1>
+    </header>
 
-  <div class="max-w-[30rem] mx-auto">
-    <div>
-      <EndPointManage></EndPointManage>
-    </div>
+    <main class="app-main">
+      <section class="panel">
+        <EndPointManage></EndPointManage>
+      </section>
 
-    <div>
-      <CustomUploader></CustomUploader>
-    </div>
-    <div class="mt-8">
-      <FileList></FileList>
-    </div>
+      <section class="panel">
+        <CustomUploader></CustomUploader>
+      </section>
+
+      <section class="panel">
+        <FileList></FileList>
+      </section>
+    </main>
   </div>
-
-  <footer class="text-center text-xs py-[2rem] opacity-80">
-    <span>Made by <a href="https://github.com/jw-12138">jw-12138</a> with ❤️
-      <br>
-      <a href="/setup-guide/">Setup Guide</a> | 
-      <a href="https://github.com/jw-12138/r2-uploader">Open Source</a></span>
-  </footer>
 </template>
 
 <script setup>

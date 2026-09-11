@@ -1,107 +1,240 @@
-:root {
-  --form-element-spacing-vertical: .5rem;
-  --form-element-spacing-horizontal: 1rem;
-  --border-radius: .5rem;
+:root,
+[data-theme="dark"],
+[data-theme="light"] {
+  color-scheme: dark;
+
+  --wh-bg: #0b0b0c;
+  --wh-bg-raised: #121214;
+  --wh-bg-input: #161618;
+  --wh-bg-hover: #1b1b1e;
+  --wh-border: #2a2a2e;
+  --wh-border-strong: #3c3c42;
+  --wh-text: #ececef;
+  --wh-text-muted: #8e8e96;
+  --wh-accent: #e8e8ea;
+  --wh-focus: rgba(232, 232, 234, 0.16);
+  --wh-danger: #f07178;
+  --wh-success: #8fbf9f;
+
+  --background-color: var(--wh-bg);
+  --color: var(--wh-text);
+  --h1-color: var(--wh-text);
+  --h2-color: var(--wh-text);
+  --h3-color: var(--wh-text);
+  --primary: var(--wh-accent);
+  --primary-hover: #ffffff;
+  --primary-focus: var(--wh-focus);
+  --primary-inverse: #0b0b0c;
+  --secondary: #c4c4c8;
+  --secondary-hover: #ececef;
+  --secondary-focus: rgba(196, 196, 200, 0.18);
+  --secondary-inverse: #0b0b0c;
+  --contrast: var(--wh-text);
+  --muted-color: var(--wh-text-muted);
+  --muted-border-color: var(--wh-border);
+  --card-background-color: var(--wh-bg-raised);
+  --card-sectionning-background-color: #18181b;
+  --form-element-background-color: var(--wh-bg-input);
+  --form-element-border-color: var(--wh-border);
+  --form-element-active-border-color: var(--wh-border-strong);
+  --form-element-focus-color: var(--wh-focus);
+  --form-element-placeholder-color: #6b6b73;
+  --form-element-spacing-vertical: 0.55rem;
+  --form-element-spacing-horizontal: 0.85rem;
+  --border-radius: 0.625rem;
+  --font-family: "Inter", system-ui, -apple-system, "Segoe UI", "Roboto", "Ubuntu",
+    "Cantarell", "Noto Sans", sans-serif;
+  --font-size: 16px;
+  --modal-overlay-background-color: rgba(0, 0, 0, 0.62);
 }
 
-h1 {
-  font-family: 'Koulen', sans-serif;
+html,
+body {
+  background: var(--wh-bg);
+  color: var(--wh-text);
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+}
+
+.app-shell {
+  max-width: 36rem;
+  margin: 0 auto;
+  padding: 2.75rem 1.15rem 4rem;
+}
+
+.app-header {
+  margin-bottom: 2rem;
+  padding-bottom: 1.35rem;
+  border-bottom: 1px solid var(--wh-border);
+}
+
+.wordmark {
+  font-family: "Space Grotesk", "Inter", system-ui, sans-serif;
+  font-weight: 500;
+  font-size: 1.05rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  line-height: 1.2;
+  margin: 0;
+  color: var(--wh-text);
+}
+
+.app-main {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.panel {
+  background: var(--wh-bg-raised);
+  border: 1px solid var(--wh-border);
+  border-radius: 0.85rem;
+  padding: 1.15rem 1.15rem 1.05rem;
+}
+
+.section-title,
+summary.section-title {
+  font-family: "Inter", system-ui, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  font-style: normal;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--wh-text-muted);
 }
 
 details {
   border: none;
+  margin-bottom: 0;
 }
 
-[data-tooltip]:not(a,button,input) {
-  border-bottom: none;
+details summary {
+  color: var(--wh-text-muted);
 }
 
 details summary::after {
   display: inline-block;
   position: relative;
-  top: .2rem;
+  top: 0.15rem;
   float: none;
 }
 
-/* Blue Light scheme (Default) */
-/* Can be forced with data-theme="light" */
-[data-theme="light"],
-:root:not([data-theme="dark"]) {
-  --primary: #151515;
-  --color: #000;
-  --primary-hover: #424242;
-  --primary-focus: rgba(0, 0, 0, 0.12);
-  --primary-inverse: #FFF;
-  --font-family: system-ui, -apple-system, "Segoe UI", "Roboto", "Ubuntu", "Cantarell", "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-  --modal-overlay-background-color: rgba(255, 255, 255, .5)
+details article {
+  background: transparent;
+  box-shadow: none;
+  border: 1px solid var(--wh-border);
+  border-radius: 0.7rem;
+  padding: 1rem;
+  margin: 0.85rem 0 0;
+}
+
+details article + article {
+  margin-top: 0.75rem;
+}
+
+label {
+  color: var(--wh-text);
+}
+
+input:not([type="checkbox"]):not([type="radio"]),
+select,
+textarea {
+  background-color: var(--wh-bg-input);
+  border-color: var(--wh-border);
+  color: var(--wh-text);
+}
+
+input:not([type="checkbox"]):not([type="radio"]):focus,
+select:focus,
+textarea:focus {
+  border-color: var(--wh-border-strong);
+  box-shadow: 0 0 0 3px var(--wh-focus);
+}
+
+button {
+  border-radius: 0.55rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+button[class*="outline"],
+button.outline {
+  background: transparent;
+  border: 1px solid var(--wh-border-strong);
+  color: var(--wh-text);
+}
+
+button[class*="outline"]:hover,
+button.outline:hover {
+  background: var(--wh-bg-hover);
+  border-color: #5a5a62;
+}
+
+.file-picker-btn {
+  display: inline-block;
+  cursor: pointer;
+  margin: 0.85rem 0.5rem 0.85rem 0;
+  padding: 0.45rem 0.9rem;
+  border: 1px solid var(--wh-border-strong);
+  border-radius: 0.55rem;
+  background: var(--wh-bg-input);
+  color: var(--wh-text);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.4;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.file-picker-btn:hover {
+  background: var(--wh-bg-hover);
+  border-color: #5a5a62;
+}
+
+[data-tooltip]:not(a, button, input) {
+  border-bottom: none;
 }
 
 code {
-  color: #111;
-  font-size: .6rem;
+  color: var(--wh-text);
+  background: #1c1c20;
+  font-size: 0.7rem;
 }
 
 pre code {
-  color: #111;
-  font-size: .6rem;
+  color: var(--wh-text);
+  font-size: 0.7rem;
 }
 
-/* Blue Dark scheme (Auto) */
-/* Automatically enabled if user has Dark mode enabled */
-@media only screen and (prefers-color-scheme: dark) {
-
-  code {
-    color: #fff;
-  }
-
-  pre code {
-    color: #fff;
-  }
-
-  :root:not([data-theme]) {
-    --color: #fff;
-    --background-color: #121212;
-    --primary: #ffffff;
-    --primary-hover: #f3f3f3;
-    --primary-focus: rgba(255, 255, 255, 0.5);
-    --primary-inverse: #000000;
-    --card-background-color: #232323;
-    --form-element-border-color: #555;
-    --form-element-background-color: #333;
-    --font-family: system-ui, -apple-system, "Segoe UI", "Roboto", "Ubuntu", "Cantarell", "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-    --secondary: hsl(0deg 0% 78%);
-    --secondary-hover: hsl(0deg 0% 91%);
-    --secondary-focus: rgb(152 152 152 / 25%);
-    --secondary-inverse: #fff;
-    --muted-color: hsl(0deg 0% 55%);
-    --muted-border-color: #616161;
-    --card-sectionning-background-color: #333;
-    --modal-overlay-background-color: rgba(0, 0, 0, .5)
-  }
-
-  [type=checkbox]:checked, [type=checkbox]:checked:active, [type=checkbox]:checked:focus, [type=radio]:checked, [type=radio]:checked:active, [type=radio]:checked:focus {
-    background-color: transparent;
-  }
-
-  [type=checkbox][role=switch]{
-    border-color: rgba(255,255,255,.1);
-    background: rgba(255,255,255,.1);
-  }
-
-  [type=checkbox][role=switch]::before {
-    background-color: #aaa;
-  }
-
-  [type=checkbox][role=switch]:checked{
-    background: rgba(255,255,255,1);
-  }
-
-  [type=checkbox][role=switch]:checked::before {
-    background-color: #333;
-  }
+[type="checkbox"]:checked,
+[type="checkbox"]:checked:active,
+[type="checkbox"]:checked:focus,
+[type="radio"]:checked,
+[type="radio"]:checked:active,
+[type="radio"]:checked:focus {
+  background-color: transparent;
 }
 
-@media (min-width: 992px) {
+[type="checkbox"][role="switch"] {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+[type="checkbox"][role="switch"]::before {
+  background-color: #aaa;
+}
+
+[type="checkbox"][role="switch"]:checked {
+  background: #ffffff;
+}
+
+[type="checkbox"][role="switch"]:checked::before {
+  background-color: #222;
+}
+
+@media (min-width: 576px) {
   :root {
     --font-size: 16px;
   }
@@ -111,9 +244,13 @@ pre code {
   :root {
     --font-size: 16px;
   }
+
+  .app-shell {
+    padding-top: 3.5rem;
+  }
 }
 
-@media (min-width: 576px) {
+@media (min-width: 992px) {
   :root {
     --font-size: 16px;
   }

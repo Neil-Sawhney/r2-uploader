@@ -1,7 +1,7 @@
 <template>
   <div>
     <details :open="panelOpen === '1'" id="panel">
-      <summary class="font-bold italic">Endpoints</summary>
+      <summary class="section-title">Endpoints</summary>
       <article>
         <form action="javascript:" class="mb-0">
           <div class="pb-2 text-xs opacity-80">
@@ -86,7 +86,7 @@
             />
             <div class="opacity-70 text-xs leading-4 mb-8">
               Use your own domain name to access the files instead of
-              <code class="text-black dark:text-white"
+              <code class="text-[#ececef]"
                 >&lt;bucket&gt;.&lt;user&gt;.workers.dev</code
               >.
             </div>

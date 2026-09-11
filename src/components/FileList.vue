@@ -1,6 +1,6 @@
 <template>
   <form action="javascript:">
-    <div class="font-bold italic">
+    <div class="section-title">
       <div>File List</div>
     </div>
 
@@ -100,7 +100,7 @@
       <div>
         <div
           class="rounded-lg mb-2"
-          :class="seeFolderStructure ? 'bg-neutral-50 dark:bg-[#333] p-2 shadow' : ''"
+          :class="seeFolderStructure ? 'bg-[#1a1a1d] p-2 border border-[#2a2a2e]' : ''"
           v-for="folder in Object.keys(dirMap).map((el) => {
             return {
               name: el,
