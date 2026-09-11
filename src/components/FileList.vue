@@ -132,12 +132,12 @@
               >
             </div>
             <div
-              class="item mb-2 rounded text-sm py-1 flex items-center justify-between"
+              class="item file-row mb-2 rounded text-sm py-1 flex items-center justify-between"
               :class="seeFolderStructure ? 'pl-4' : ''"
               v-for="item in dirMap[folder.name]"
               :key="item.key"
             >
-              <div class="w-[2rem]" v-show="selectMode">
+              <div class="w-[2rem] shrink-0" v-show="selectMode">
                 <input
                   type="checkbox"
                   @change="updateSelectedFiles(item, folder.name)"
@@ -146,15 +146,11 @@
                 />
               </div>
               <div
-                class="name whitespace-nowrap text-left text-ellipsis overflow-hidden break-all"
-                style="width: calc(100% - 7rem)"
-                :style="{
-                  width: selectMode ? 'calc(100% - 2rem)' : 'calc(100% - 5rem)',
-                }"
+                class="name min-w-0 flex-1 whitespace-nowrap text-left text-ellipsis overflow-hidden break-all"
               >
                 <div class="w-full overflow-hidden text-ellipsis whitespace-nowrap">
                   <a
-                    :href="(customDomain ? customDomain : endPoint) + item.key"
+                    :href="filePublicUrl(item.key, customDomain, endPoint)"
                     target="_blank"
                     v-show="!selectMode"
                     >{{ item.fileName }}</a
@@ -164,10 +160,17 @@
                   }}</label>
                 </div>
               </div>
-              <div class="actions w-[5rem] shrink-0 text-right" v-show="!selectMode">
+              <div class="file-actions" v-show="!selectMode">
                 <button
-                  style="border: none; padding: 0.2rem 0.3rem"
-                  class="w-auto inline-block outline text-xs text-red-500 mb-0"
+                  type="button"
+                  class="outline file-action-btn mb-0"
+                  @click="openShare(item)"
+                >
+                  Share
+                </button>
+                <button
+                  type="button"
+                  class="outline file-action-btn text-red-500 mb-0"
                   @click="deleteThisFile(item.key)"
                   :aria-busy="deletingKey === item.key"
                   :disabled="deletingKey === item.key"
@@ -194,6 +197,13 @@
       </div>
     </div>
   </form>
+
+  <ShareSheet
+    :open="shareOpen"
+    :file-name="shareFileName"
+    :url="shareUrl"
+    @close="closeShare"
+  />
 </template>
 
 <script setup>
@@ -202,6 +212,8 @@ import axios from "axios";
 import { useStatusStore } from "../store/status";
 import { storeToRefs } from "pinia";
 import { nanoid } from "nanoid";
+import ShareSheet from "./ShareSheet.vue";
+import { filePublicUrl } from "../utils/fileUrl.js";
 
 let sort = ref("0");
 
@@ -379,11 +391,23 @@ function deleteSelectedFiles() {
 const copyButtonText = ref("Copy URLs");
 const copyButtonDisabled = ref(false);
 
+const shareOpen = ref(false);
+const shareFileName = ref("");
+const shareUrl = ref("");
+
+function openShare(item) {
+  shareFileName.value = item.fileName || item.key;
+  shareUrl.value = filePublicUrl(item.key, customDomain, endPoint);
+  shareOpen.value = true;
+}
+
+function closeShare() {
+  shareOpen.value = false;
+}
+
 function copySelectedFileUrls() {
-  // Access selected files using .value
   const fileUrls = selectedFiles.value.map((file) => {
-    const baseUrl = customDomain ? customDomain : endPoint;
-    return baseUrl + file.key;
+    return filePublicUrl(file.key, customDomain, endPoint);
   });
 
   // Copy to clipboard
@@ -602,5 +626,27 @@ async function loadData(action) {
   }
 }
 
-loadData();
+async function seedPreviewShare() {
+  if (!import.meta.env.DEV) {
+    return;
+  }
+  if (!new URLSearchParams(location.search).has("previewShare")) {
+    return;
+  }
+
+  endPoint = endPoint || "https://cdn.example.com/";
+  fileList.value = [
+    {
+      key: "demo/hello.txt",
+      fileName: "hello.txt",
+      size: 42,
+      uploaded: new Date().toISOString(),
+    },
+  ];
+  loadDataErrorText.value = "";
+  loadDataErrorStack.value = "";
+  await mapFilesToDir();
+}
+
+loadData().then(seedPreviewShare);
 </script>
