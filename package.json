@@ -18,7 +18,8 @@
     "cf:deploy": "wrangler deploy --assets=./dist",
     "deploy:vercel": "npm run build:setup && vercel --prod",
     "clean": "rm -rf dist",
-    "verify:dist": "node scripts/verify-dist.mjs"
+    "verify:dist": "node scripts/verify-dist.mjs",
+    "verify:shortlink": "node scripts/verify-shortlink.mjs"
   },
   "dependencies": {
     "autoprefixer": "^10.4.20",
@@ -44,6 +45,6 @@
     "typescript": "^5.9.3",
     "vite": "^5.4.8",
     "vue-tsc": "^3.2.5",
-    "wrangler": "^4.40.0"
+    "wrangler": "^4.131.1"
   }
 }

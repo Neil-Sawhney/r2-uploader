@@ -17,6 +17,13 @@
         <FileList></FileList>
       </section>
     </main>
+
+    <ShareSheet
+      :open="statusStore.shareOpen"
+      :file-name="statusStore.shareFileName"
+      :url="statusStore.shareUrl"
+      @close="statusStore.closeShare()"
+    />
   </div>
 </template>
 
@@ -24,4 +31,8 @@
 import CustomUploader from './components/CustomUploader.vue'
 import FileList from './components/FileList.vue'
 import EndPointManage from './components/EndPointManage.vue'
+import ShareSheet from './components/ShareSheet.vue'
+import { useStatusStore } from './store/status'
+
+const statusStore = useStatusStore()
 </script>

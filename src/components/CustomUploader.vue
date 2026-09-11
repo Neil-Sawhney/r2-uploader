@@ -93,14 +93,26 @@
             </div>
           </div>
         </div>
-        <div v-show="uploadIsDone" class="text-center">
-          <button
-            class="inline-block w-auto text-xs outline"
-            style="border: none"
-            @click="clearUploadedFiles"
+        <div v-show="uploadIsDone" class="uploaded-share">
+          <div
+            class="uploaded-share-row"
+            v-for="item in uploadedList"
+            :key="item.key"
           >
-            Dismiss
-          </button>
+            <span class="uploaded-share-name">{{ item.key }}</span>
+            <button type="button" class="share-row-btn mb-0" @click="shareUploaded(item)">
+              Share / QR
+            </button>
+          </div>
+          <div class="text-center">
+            <button
+              class="inline-block w-auto text-xs outline"
+              style="border: none"
+              @click="clearUploadedFiles"
+            >
+              Dismiss
+            </button>
+          </div>
         </div>
         <div class="pb-4" v-show="fileList.length > 0 && !uploading">
           <div class="flex mb-2">
@@ -329,6 +341,7 @@ import axios from "axios";
 import { useStatusStore } from "../store/status";
 import { nanoid } from "nanoid";
 import Compressor from "compressorjs";
+import { filePublicUrl } from "../utils/fileUrl.js";
 
 let statusStore = useStatusStore();
 
@@ -350,6 +363,15 @@ let renameFileWithRandomId = ref(false);
 let compressImagesBeforeUploading = ref(false);
 let uploadToFolder = ref(false);
 let customFolderName = ref("");
+
+let shareUploaded = function (file) {
+  const key = renameFileWithRandomId.value ? file.id_key : file.key;
+  const publicKey = formatFileName(key);
+  statusStore.openShare({
+    fileName: publicKey,
+    url: filePublicUrl(publicKey),
+  });
+};
 
 let clearUploadedFiles = function () {
   uploadedList.value = [];

@@ -28,6 +28,9 @@ jobs:
       - name: Verify dist is the NEILS WORMHOLE app
         run: npm run verify:dist
 
+      - name: Verify short link helpers
+        run: npm run verify:shortlink
+
       - name: Check for Cloudflare API token
         id: token
         env:
