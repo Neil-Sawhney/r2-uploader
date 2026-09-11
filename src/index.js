@@ -8,6 +8,8 @@ import authCallback from '../api/auth_callback.js'
 import syncConfig from '../api/sync_config.js'
 import pullConfig from '../api/pull_config.js'
 import deleteConfig from '../api/delete_config.js'
+import shortlink from '../api/shortlink.js'
+import { isReservedPathSegment, slugKey } from './utils/shortSlug.js'
 
 const apiRoutes = new Map([
   ['/api/check_github_user', checkGithubUser],
@@ -15,7 +17,27 @@ const apiRoutes = new Map([
   ['/api/sync_config', syncConfig],
   ['/api/pull_config', pullConfig],
   ['/api/delete_config', deleteConfig],
+  ['/api/shortlink', shortlink],
 ])
+
+async function redirectShortLink(path, env) {
+  const parts = path.split('/').filter(Boolean)
+  if (parts.length !== 1) {
+    return null
+  }
+
+  const slug = parts[0]
+  if (isReservedPathSegment(slug) || !env?.SHORT_LINKS) {
+    return null
+  }
+
+  const target = await env.SHORT_LINKS.get(slugKey(slug))
+  if (!target) {
+    return null
+  }
+
+  return Response.redirect(target, 302)
+}
 
 export default {
   async fetch(request, env) {
@@ -25,7 +47,12 @@ export default {
     const path = url.pathname.replace(/\/+$/, '') || '/'
     const handler = apiRoutes.get(path)
     if (handler) {
-      return handler(request)
+      return handler(request, env)
+    }
+
+    const redirected = await redirectShortLink(path, env)
+    if (redirected) {
+      return redirected
     }
 
     if (env.ASSETS) {

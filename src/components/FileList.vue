@@ -76,11 +76,11 @@
       <div class="text-xs mb-2" v-show="fileList.length > 0">
         Sort by
         <select class="text-xs inline-block w-[10rem] mb-0" v-model="sort">
-          <option value="0">Default</option>
-          <option value="1">Date(newest first)</option>
-          <option value="2">Date(oldest first)</option>
-          <option value="3">Size(largest first)</option>
-          <option value="4">Size(smallest first)</option>
+          <option value="0">Bucket order</option>
+          <option value="1">Date (newest first)</option>
+          <option value="2">Date (oldest first)</option>
+          <option value="3">Size (largest first)</option>
+          <option value="4">Size (smallest first)</option>
         </select>
       </div>
 
@@ -163,10 +163,10 @@
               <div class="file-actions" v-show="!selectMode">
                 <button
                   type="button"
-                  class="outline file-action-btn mb-0"
+                  class="share-row-btn mb-0"
                   @click="openShare(item)"
                 >
-                  Share
+                  Share / QR
                 </button>
                 <button
                   type="button"
@@ -197,13 +197,6 @@
       </div>
     </div>
   </form>
-
-  <ShareSheet
-    :open="shareOpen"
-    :file-name="shareFileName"
-    :url="shareUrl"
-    @close="closeShare"
-  />
 </template>
 
 <script setup>
@@ -212,10 +205,9 @@ import axios from "axios";
 import { useStatusStore } from "../store/status";
 import { storeToRefs } from "pinia";
 import { nanoid } from "nanoid";
-import ShareSheet from "./ShareSheet.vue";
 import { filePublicUrl } from "../utils/fileUrl.js";
 
-let sort = ref("0");
+let sort = ref("1");
 
 onMounted(() => {
   if (localStorage.getItem("seeFolderStructure") === "1") {
@@ -391,18 +383,11 @@ function deleteSelectedFiles() {
 const copyButtonText = ref("Copy URLs");
 const copyButtonDisabled = ref(false);
 
-const shareOpen = ref(false);
-const shareFileName = ref("");
-const shareUrl = ref("");
-
 function openShare(item) {
-  shareFileName.value = item.fileName || item.key;
-  shareUrl.value = filePublicUrl(item.key, customDomain, endPoint);
-  shareOpen.value = true;
-}
-
-function closeShare() {
-  shareOpen.value = false;
+  statusStore.openShare({
+    fileName: item.fileName || item.key,
+    url: filePublicUrl(item.key, customDomain, endPoint),
+  });
 }
 
 function copySelectedFileUrls() {

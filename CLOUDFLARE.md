@@ -122,3 +122,29 @@ npx wrangler secret put D1_KEY
 npx wrangler secret put GITHUB_CLIENT_ID
 npx wrangler secret put GITHUB_CLIENT_SECRET
 ```
+
+## Short links (Workers KV)
+
+`https://wormhole.neilneilneil.com/<slug>` 302s to a file’s public R2 URL.
+
+`wrangler.json` declares the binding with no ID so Wrangler 4.45+ can provision it on deploy:
+
+```json
+"kv_namespaces": [{ "binding": "SHORT_LINKS" }]
+```
+
+`assets.run_worker_first` is `true` so the Worker can intercept slugs before the SPA.
+
+If Git / Workers Builds does **not** auto-create the namespace:
+
+1. Cloudflare dashboard → **Storage & databases** → **KV** → **Create namespace** named e.g. `r2-uploader-SHORT_LINKS`.
+2. Workers & Pages → **r2-uploader** → **Settings** → **Bindings** → add KV namespace binding `SHORT_LINKS`.
+3. Or locally (needs `CLOUDFLARE_API_TOKEN` / `wrangler login`):
+
+```bash
+npx wrangler kv namespace create SHORT_LINKS
+```
+
+Paste the printed `id` into `wrangler.json` `kv_namespaces[0].id` and redeploy.
+
+Reserved slugs are rejected: `api`, `setup-guide`, `assets`, and other app paths. Slugs are lowercase letters, numbers, and hyphens.
