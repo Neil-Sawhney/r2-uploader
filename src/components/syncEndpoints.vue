@@ -11,11 +11,7 @@
         Login With
         <img
           class="h-[1.3rem] relative top-[-.1rem]"
-          :src="
-            isDark
-              ? 'https://r2-cf-api.jw1.dev/GitHub_Logo.png'
-              : 'https://r2-cf-api.jw1.dev/GitHub_Logo_White.png'
-          "
+          src="https://r2-cf-api.jw1.dev/GitHub_Logo.png"
           alt="GitHub"
         />
       </button>
@@ -116,15 +112,9 @@ import * as encoding from "crypto-js/enc-utf8";
 import { animateText } from "../utils/animateText.js";
 import axios from "axios";
 
-let isDark = ref(false);
 let GITHUB_CLIENT_ID = "8318b6fc09ace8ab9747";
 
 let showPassword = ref(false);
-
-let getWindowTheme = () => {
-  isDark.value =
-    window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-};
 
 let logout = function () {
   let c = confirm("Are you sure to log out?");
@@ -168,16 +158,6 @@ let restoreEncryptionPassword = () => {
 };
 
 restoreEncryptionPassword();
-
-let listenWindowTheme = () => {
-  let mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-  mediaQuery.addEventListener("change", (e) => {
-    isDark.value = e.matches;
-  });
-};
-
-getWindowTheme();
-listenWindowTheme();
 
 let sync_status = ref("waiting for user action");
 

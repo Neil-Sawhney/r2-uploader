@@ -25,7 +25,7 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Verify dist is the R2 Uploader app
+      - name: Verify dist is the NEILS WORMHOLE app
         run: npm run verify:dist
 
       - name: Check for Cloudflare API token

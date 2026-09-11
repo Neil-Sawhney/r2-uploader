@@ -1,11 +1,11 @@
 <template>
   <div>
     <form action="javascript:">
-      <div class="font-bold italic">Upload Files</div>
+      <div class="section-title">Upload Files</div>
       <div>
         <label
           for="fileInput"
-          class="rounded bg-emerald-200 dark:bg-emerald-800 px-4 py-2 inline-block mt-4 mb-4 cursor-pointer text-sm shadow hover:shadow-xl"
+          class="file-picker-btn"
           :style="{
             opacity: uploading ? 0.5 : 1,
           }"
@@ -14,12 +14,12 @@
 
         <label
           v-show="browserSupportsDirectoryUpload"
-          class="ml-2 rounded bg-emerald-100 dark:bg-emerald-900 px-4 py-2 inline-block mt-4 mb-4 cursor-pointer text-sm shadow hover:shadow-xl"
+          class="file-picker-btn"
           :style="{
             opacity: uploading ? 0.5 : 1,
           }"
           @click="handleFolder"
-          >Choose Folder 📂</label
+          >Choose Folder</label
         >
 
         <input
@@ -33,7 +33,7 @@
       </div>
       <div class="mt-2" v-show="fileList.length">
         <button
-          class="inline-block w-auto shadow transition-all hover:shadow-xl hover:rounded-3xl"
+          class="inline-block w-auto"
           @click="upload"
           :disabled="uploading"
         >
@@ -54,11 +54,11 @@
         </div>
         <div v-show="fileList.length + uploadedList.length > 0">
           <div
-            class="text-center text-xs py-4"
+            class="text-center text-xs py-4 text-[#8e8e96]"
             v-show="uploading || uploadedList.length > 0"
           >
             {{ uploadIsDone ? "Uploaded" : "Uploading" }} at
-            <span class="dark:text-green-200 text-green-800 italic font-bold">{{
+            <span class="text-[#8fbf9f] font-semibold">{{
               globalSpeed
             }}</span
             ><span v-show="uploadIsDone">, All done.</span>
@@ -68,7 +68,7 @@
         <div v-show="fileList.length + uploadedList.length > 0" class="pb-4 pt-2">
           <!--          upload status map -->
           <div
-            class="flex flex-wrap dark:bg-neutral-950 bg-neutral-50 pt-2 px-2 pb-1 rounded-xl shadow"
+            class="flex flex-wrap bg-[#0e0e10] pt-2 px-2 pb-1 rounded-xl border border-[#2a2a2e]"
           >
             <div
               v-for="item in uploadedList"
@@ -95,7 +95,7 @@
         </div>
         <div v-show="uploadIsDone" class="text-center">
           <button
-            class="inline-block border-0 w-auto text-xs outline dark:bg-neutral-800 bg-neutral-100 hover:bg-neutral-300 hover:dark:bg-neutral-700 rounded-3xl"
+            class="inline-block w-auto text-xs outline"
             style="border: none"
             @click="clearUploadedFiles"
           >
@@ -238,7 +238,7 @@
           :key="item.key"
         >
           <div
-            class="w-full bg-neutral-50 text-xs rounded dark:bg-[#333] px-2 py-2 relative shadow"
+            class="w-full text-xs rounded bg-[#1a1a1d] px-2 py-2 relative border border-[#2a2a2e]"
           >
             <div
               class="progress absolute h-[.1rem] bottom-0 left-0 bg-green-500 transition-all"
@@ -805,7 +805,7 @@ async function mpuUploadFile(file, data) {
 
   if (!remoteSupport) {
     alert(
-      `R2 workers has refactored its code to support big file uploading, please see the new setup guide at https://r2.jw1.dev/setup-guide`,
+      `R2 workers has refactored its code to support big file uploading, please see the setup guide at /setup-guide`,
     );
     return false;
   }

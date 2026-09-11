@@ -16,11 +16,11 @@ if (!existsSync(indexPath)) {
 const html = readFileSync(indexPath, 'utf8')
 
 if (/^\s*Hello world\s*$/i.test(html) || html.trim() === 'Hello world') {
-  fail('dist/index.html is the Hello world placeholder, not the R2 Uploader app')
+  fail('dist/index.html is the Hello world placeholder, not the NEILS WORMHOLE app')
 }
 
-if (!html.includes('R2 Uploader')) {
-  fail('dist/index.html does not contain "R2 Uploader"')
+if (!html.includes('NEILS WORMHOLE')) {
+  fail('dist/index.html does not contain "NEILS WORMHOLE"')
 }
 
 if (!html.includes('<div id="app">')) {
@@ -43,4 +43,4 @@ if (existsSync(join(dist, '_worker.js'))) {
   }
 }
 
-console.log('verify-dist: dist/ looks like the R2 Uploader Vue app')
+console.log('verify-dist: dist/ looks like the NEILS WORMHOLE Vue app')

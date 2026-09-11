@@ -4,7 +4,7 @@
 
 In May 2022, Cloudflare launched R2 into open beta, a new S3-like object storing platform with generous free tier. It is a great alternative to AWS S3, especially for small projects and personal use. You can use the Cloudflare R2 dashboard to upload files directly, but it's kinda painful to use, this tool aims to solve these problems for the R2 users:
 
-- **Upload big files**, R2 dashboard could only upload files which size is smaller than 300Mb, R2 Uploader can handle the upload for a single file up to 100Gb in theory (huge thanks to [@spurin](https://github.com/spurin)).
+- **Upload big files**, R2 dashboard could only upload files which size is smaller than 300Mb, NEILS WORMHOLE can handle the upload for a single file up to 100Gb in theory (huge thanks to [@spurin](https://github.com/spurin)).
 - **Image compression**, lots of users would just use R2 as a CDN, so we added this function to make the images load faster.
 - **Easily jump between multiple buckets**, setup multiple workers for different buckets, and switch between them fast.
 - **Sync configs across devices safely**, you can login with GitHub and sync your configs, all data is AES encrypted locally before sending to our database.
@@ -27,7 +27,7 @@ And that's it, now we set up the workers.
 
 ### Set up the Worker 👷‍♂️
 
-A Worker is like the backend of a website, it allows the R2 Uploader to communicate with the R2 bucket. **This is the most important part of the setup, so please follow the steps carefully.**
+A Worker is like the backend of a website, it allows NEILS WORMHOLE to communicate with the R2 bucket. **This is the most important part of the setup, so please follow the steps carefully.**
 
 1. Go to [Cloudflare Dashboard](https://dash.cloudflare.com/).
 2. On the left panel, there is a section called "Workers & Pages". Click on it.
@@ -62,7 +62,7 @@ Phew, we've come a long way, now we are going to set up the uploader, which is t
 
 Remember the Worker URL and the random string we saved earlier? We will need them now.
 
-In R2 Uploader, we call the Worker URL as the "Endpoint" and the random string as the "API Key". Enter the Endpoint and the API key, ignore the custom domain for now and click "Save to LocalStorage".
+In NEILS WORMHOLE, we call the Worker URL as the "Endpoint" and the random string as the "API Key". Enter the Endpoint and the API key, ignore the custom domain for now and click "Save to LocalStorage".
 
 Now you can upload and manage your files in the R2 bucket!
 
@@ -70,7 +70,7 @@ Now you can upload and manage your files in the R2 bucket!
 
 <span style="font-size: 2rem">🎉</span>
 
-R2 Uploader **does not** store your Endpoints or API keys in the cloud, it is stored in your browser's LocalStorage, which means it is only accessible by you. All the traffic goes through the Worker and the R2 bucket you just created.
+NEILS WORMHOLE **does not** store your Endpoints or API keys in the cloud, it is stored in your browser's LocalStorage, which means it is only accessible by you. All the traffic goes through the Worker and the R2 bucket you just created.
 
 **Note:** We use `showDirectoryPicker` API to make the folder upload possible, if the `Choose Folder` button doesn't show up, it simply means that your browser does not support this API. ([showDirectoryPicker on MDN](https://developer.mozilla.org/en-US/docs/Web/API/Window/showDirectoryPicker))
 
@@ -98,22 +98,22 @@ Workers and R2 both supports custom domain, and we just need one of them to make
 1. Go to [Cloudflare Dashboard](https://dash.cloudflare.com/).
 2. On the left panel, there is a section called "Workers & Pages". Click on it.
 3. Go to your Worker, click on the "Triggers", you'll see a custom domain section, click on the "Add Custom Domain" button. Input the domain name and you're done!
-4. Remember to replace the Endpoint in the R2 Uploader with the custom domain.
+4. Remember to replace the Endpoint in NEILS WORMHOLE with the custom domain.
 
 **For R2:**
 
 1. Go to [Cloudflare Dashboard](https://dash.cloudflare.com/).
 2. On the left panel, there is a section called "R2". Click on it.
 3. Go to your bucket, click on the "Settings", find "Custom Domains" section, and then click on the "Connect Domain" button. Input the domain name just like you did in the Workers, and you're done!
-4. Remember to update the **Custom Domain** in the R2 Uploader with **the R2 custom domain**.
+4. Remember to update the **Custom Domain** in NEILS WORMHOLE with **the R2 custom domain**.
 
-   Attention! This time, instead of changing the Endpoint field in the R2 Uploader, we change the Custom Domain field with the R2 custom domain.
+   Attention! This time, instead of changing the Endpoint field in NEILS WORMHOLE, we change the Custom Domain field with the R2 custom domain.
 
    ![](https://r2-cf-api.jw1.dev/endpoint.png)
 
 This sounds a little bit complicated, let me break it down for you:
 
-- Setting up a custom domain for Workers is the simplest way to work with R2 Uploader
+- Setting up a custom domain for Workers is the simplest way to work with NEILS WORMHOLE
 
 ### Running/Testing with Docker (and optionally, ngrok) 🐋
 
@@ -156,4 +156,4 @@ This sounds a little bit complicated, let me break it down for you:
 
 ---
 
-Ok now, I think we've covered everything, if you have any questions, feel free to create a new issue under [this repo](https://github.com/jw-12138/r2-uploader/issues).
+Ok now, I think we've covered everything, if you have any questions, feel free to create a new issue under [this repo](https://github.com/Neil-Sawhney/r2-uploader/issues).
