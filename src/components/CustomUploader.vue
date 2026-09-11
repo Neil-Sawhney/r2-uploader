@@ -99,7 +99,21 @@
             v-for="item in uploadedList"
             :key="item.key"
           >
-            <span class="uploaded-share-name">{{ item.key }}</span>
+            <div class="uploaded-share-meta">
+              <span class="uploaded-share-name">{{ item.key }}</span>
+              <span
+                v-if="uploadedShortMeta[item.key]?.slug"
+                class="uploaded-short-slug"
+              >
+                {{ shortNameOrigin }}/{{ uploadedShortMeta[item.key].slug }}
+              </span>
+              <span
+                v-else-if="uploadedShortMeta[item.key]?.error"
+                class="uploaded-short-error"
+              >
+                {{ uploadedShortMeta[item.key].error }}
+              </span>
+            </div>
             <button type="button" class="share-row-btn mb-0" @click="shareUploaded(item)">
               Share / QR
             </button>
@@ -241,6 +255,39 @@
               @blur="handleFolderNameBlur"
             />
           </div>
+          <div class="upload-short-name">
+            <label class="text-xs whitespace-nowrap" for="uploadShortName">
+              Short name
+            </label>
+            <span class="upload-short-origin">{{ shortNameOrigin }}/</span>
+            <input
+              id="uploadShortName"
+              type="text"
+              class="text-xs"
+              v-model="uploadShortName"
+              placeholder="coolname"
+              autocomplete="off"
+              spellcheck="false"
+              :disabled="uploading"
+              @blur="uploadShortName = normalizeSlug(uploadShortName)"
+            />
+            <p
+              v-if="uploadShortNameHint"
+              class="upload-short-hint"
+              :class="{
+                'is-error': uploadShortNameHintKind === 'error',
+                'is-success': uploadShortNameHintKind === 'success',
+              }"
+            >
+              {{ uploadShortNameHint }}
+            </p>
+            <p
+              v-else-if="fileList.length > 1 && uploadShortName.trim()"
+              class="upload-short-hint"
+            >
+              Applies to the first uploaded file.
+            </p>
+          </div>
         </div>
 
         <div class="pt-4 pb-2 text-xs" v-show="fileList.length">Files Queued:</div>
@@ -336,12 +383,14 @@
 </template>
 
 <script setup>
-import { onMounted, reactive, ref, watch } from "vue";
+import { computed, onMounted, reactive, ref, watch } from "vue";
 import axios from "axios";
 import { useStatusStore } from "../store/status";
 import { nanoid } from "nanoid";
 import Compressor from "compressorjs";
 import { filePublicUrl } from "../utils/fileUrl.js";
+import { saveShortLink, slugIsTaken } from "../utils/shortLinkClient.js";
+import { normalizeSlug, validateSlug } from "../utils/shortSlug.js";
 
 let statusStore = useStatusStore();
 
@@ -363,6 +412,25 @@ let renameFileWithRandomId = ref(false);
 let compressImagesBeforeUploading = ref(false);
 let uploadToFolder = ref(false);
 let customFolderName = ref("");
+let uploadShortName = ref("");
+let uploadShortNameHint = ref("");
+let uploadShortNameHintKind = ref("");
+let uploadedShortMeta = ref({});
+let pendingUploadSlug = "";
+let shortLinkAssigned = false;
+
+const shortNameOrigin = computed(() => {
+  try {
+    return location.host;
+  } catch {
+    return "wormhole.neilneilneil.com";
+  }
+});
+
+let uploadedPublicUrl = function (file) {
+  const key = renameFileWithRandomId.value ? file.id_key : file.key;
+  return filePublicUrl(formatFileName(key));
+};
 
 let shareUploaded = function (file) {
   const key = renameFileWithRandomId.value ? file.id_key : file.key;
@@ -373,8 +441,41 @@ let shareUploaded = function (file) {
   });
 };
 
+let markUploadedFile = function (file) {
+  uploadedList.value.push(file);
+  fileList.value = fileList.value.filter((item) => item.key !== file.key);
+  assignPendingShortLink(file);
+};
+
+let assignPendingShortLink = async function (file) {
+  if (shortLinkAssigned || !pendingUploadSlug) {
+    return;
+  }
+
+  shortLinkAssigned = true;
+  const result = await saveShortLink(pendingUploadSlug, uploadedPublicUrl(file));
+  if (result.slug) {
+    uploadedShortMeta.value = {
+      ...uploadedShortMeta.value,
+      [file.key]: { slug: result.slug },
+    };
+    uploadShortName.value = "";
+    uploadShortNameHint.value = "";
+    uploadShortNameHintKind.value = "";
+    return;
+  }
+
+  uploadedShortMeta.value = {
+    ...uploadedShortMeta.value,
+    [file.key]: { error: result.error || "Could not save that short name." },
+  };
+  uploadShortNameHint.value = result.error || "Could not save that short name.";
+  uploadShortNameHintKind.value = "error";
+};
+
 let clearUploadedFiles = function () {
   uploadedList.value = [];
+  uploadedShortMeta.value = {};
   progressMap.value = {};
   statusMap.value = {};
   abortControllerMap.value = {};
@@ -702,7 +803,28 @@ let removeThisFile = function (index, name) {
 };
 
 const uploadedList = ref([]);
-const upload = function () {
+const upload = async function () {
+  const slug = normalizeSlug(uploadShortName.value);
+  if (slug) {
+    const error = validateSlug(slug);
+    if (error) {
+      uploadShortNameHint.value = error;
+      uploadShortNameHintKind.value = "error";
+      return;
+    }
+
+    const taken = await slugIsTaken(slug);
+    if (taken.taken) {
+      uploadShortNameHint.value = taken.error;
+      uploadShortNameHintKind.value = "error";
+      return;
+    }
+  }
+
+  pendingUploadSlug = slug;
+  shortLinkAssigned = false;
+  uploadShortNameHint.value = "";
+  uploadShortNameHintKind.value = "";
   uploading.value = true;
   statusStore.uploading = true;
   realTimeSpeedRecords.value = {};
@@ -802,8 +924,7 @@ async function completeMpu(file, data) {
   file.endUploadingTime = new Date().getTime();
   file.uploadUsedTime = file.endUploadingTime - file.startUploadingTime;
   file.uploadSpeed = calcUploadSpeed(file.size, file.uploadUsedTime);
-  uploadedList.value.push(file);
-  fileList.value = fileList.value.filter((item) => item.key !== file.key);
+  markUploadedFile(file);
 
   doneUploadingCleanUp();
 }
@@ -1056,8 +1177,7 @@ function uploadFile(file) {
         file.endUploadingTime = new Date().getTime();
         file.uploadUsedTime = file.endUploadingTime - file.startUploadingTime;
         file.uploadSpeed = calcUploadSpeed(file.size, file.uploadUsedTime);
-        uploadedList.value.push(file);
-        fileList.value = fileList.value.filter((item) => item.key !== file.key);
+        markUploadedFile(file);
       }
     })
     .catch((e) => {
