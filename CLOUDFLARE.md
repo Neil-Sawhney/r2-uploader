@@ -42,7 +42,7 @@ This is what `wrangler.jsonc` describes. After merge, the next Git deploy should
 | Node.js version | `20` (from `.nvmrc` / env `NODE_VERSION=20`) |
 | Package manager | **npm** (uses `package-lock.json`) |
 
-This repo’s Git integration is already a Worker named **`r2-uploader`** (Cloudflare “Workers Builds: r2-uploader” runs on PRs). Keep `"name": "r2-uploader"` in `wrangler.jsonc`. If `wormhole.neilneilneil.com` stays Hello World after a successful production build, attach that hostname to this Worker (a leftover Hello World Worker may still own the custom domain).
+This repo’s Git integration is already a Worker named **`r2-uploader`** (Cloudflare “Workers Builds: r2-uploader” runs on PRs). Keep `"name": "r2-uploader"` in `wrangler.jsonc`. `wrangler.jsonc` also declares `wormhole.neilneilneil.com` as a custom domain so production deploys attach the hostname to this Worker instead of a leftover Hello World origin.
 
 Manual deploy (needs `CLOUDFLARE_API_TOKEN` + account login):
 

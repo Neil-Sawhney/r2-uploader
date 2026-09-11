@@ -15,5 +15,13 @@
   },
   "build": {
     "command": "npm run build"
-  }
+  },
+  // Bind the live hostname to THIS Worker so it replaces the leftover
+  // Hello World origin currently serving wormhole.neilneilneil.com.
+  "routes": [
+    {
+      "pattern": "wormhole.neilneilneil.com",
+      "custom_domain": true
+    }
+  ]
 }
