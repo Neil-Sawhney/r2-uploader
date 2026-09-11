@@ -1,23 +1,21 @@
 # Use the official Node parent image
-FROM node
+FROM node:20-alpine
 
 # Set the working directory in the container
 WORKDIR /usr/src/app
 
-# Copy the package.json and yarn.lock files
-COPY package.json yarn.lock* ./
-
-# Install dependencies
-RUN yarn install
+# Copy package files and install with npm (no Bun required)
+COPY package.json package-lock.json* ./
+RUN npm ci
 
 # Copy the application code
 COPY . .
 
 # Build the application
-RUN yarn build
+RUN npm run build
 
 # Inform Docker that the container is listening on port 7896 at runtime
 EXPOSE 7896
 
 # Run the application
-CMD ["yarn", "vite", "preview", "--host", "0.0.0.0", "--port", "7896"]
+CMD ["npx", "vite", "preview", "--host", "0.0.0.0", "--port", "7896"]

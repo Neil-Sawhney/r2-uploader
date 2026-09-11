@@ -6,10 +6,13 @@ export const config = {
 
 import D1 from '../utils/d1.class.js'
 import { _res } from '../utils/response.js'
+import { envVar } from '../utils/runtime-env.js'
 
-const d1 = new D1({
-  key: process.env.D1_KEY
-})
+function getD1() {
+  return new D1({
+    key: envVar('D1_KEY')
+  })
+}
 
 export default async function (req) {
   let token = req.headers.get('Authorization')
@@ -46,6 +49,7 @@ export default async function (req) {
 
   try {
     // First check if the user exists
+    const d1 = getD1()
     const userExists = await d1.query(
       'SELECT username FROM configs WHERE username = ?',
       [user_json.login]

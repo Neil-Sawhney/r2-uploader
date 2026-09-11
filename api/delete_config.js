@@ -6,10 +6,13 @@ export const config = {
 
 import D1 from '../utils/d1.class.js'
 import {_res} from '../utils/response.js'
+import { envVar } from '../utils/runtime-env.js'
 
-const d1 = new D1({
-  key: process.env.D1_KEY
-})
+function getD1() {
+  return new D1({
+    key: envVar('D1_KEY')
+  })
+}
 
 export default async function (req) {
   let allowedMethods = ['DELETE', 'OPTIONS']
@@ -57,7 +60,7 @@ export default async function (req) {
   let user_json = await user.json()
   console.log('got user')
 
-  let delete_res = await d1.query('delete from configs where username = ?', [user_json.login])
+  let delete_res = await getD1().query('delete from configs where username = ?', [user_json.login])
 
   console.log(delete_res)
 
