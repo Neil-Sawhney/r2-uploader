@@ -3,14 +3,14 @@
 [data-theme="light"] {
   color-scheme: dark;
 
-  --wh-bg: #0b0b0c;
-  --wh-bg-raised: #121214;
-  --wh-bg-input: #161618;
-  --wh-bg-hover: #1b1b1e;
-  --wh-border: #2a2a2e;
-  --wh-border-strong: #3c3c42;
-  --wh-text: #ececef;
-  --wh-text-muted: #8e8e96;
+  --wh-bg: #0a0a0b;
+  --wh-bg-raised: #161618;
+  --wh-bg-input: #1b1b1e;
+  --wh-bg-hover: #222226;
+  --wh-border: #2e2e33;
+  --wh-border-strong: #45454c;
+  --wh-text: #f2f2f4;
+  --wh-text-muted: #9a9aa3;
   --wh-accent: #e8e8ea;
   --wh-focus: rgba(232, 232, 234, 0.16);
   --wh-danger: #f07178;
@@ -74,8 +74,8 @@ body {
 .wordmark {
   font-family: "Space Grotesk", "Inter", system-ui, sans-serif;
   font-weight: 500;
-  font-size: 1.05rem;
-  letter-spacing: 0.22em;
+  font-size: 1.2rem;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   line-height: 1.2;
   margin: 0;
@@ -93,6 +93,19 @@ body {
   border: 1px solid var(--wh-border);
   border-radius: 0.85rem;
   padding: 1.15rem 1.15rem 1.05rem;
+}
+
+.panel form,
+.panel fieldset {
+  margin-bottom: 0;
+}
+
+.panel button {
+  margin-bottom: 0;
+}
+
+.panel label {
+  margin-bottom: 0.35rem;
 }
 
 .section-title,
@@ -162,22 +175,29 @@ button {
 
 button[class*="outline"],
 button.outline {
+  --background-color: transparent;
+  --border-color: var(--wh-border-strong);
+  --color: var(--wh-text);
   background: transparent;
   border: 1px solid var(--wh-border-strong);
   color: var(--wh-text);
+  box-shadow: none;
 }
 
 button[class*="outline"]:hover,
 button.outline:hover {
+  --background-color: var(--wh-bg-hover);
+  --border-color: #5c5c66;
   background: var(--wh-bg-hover);
-  border-color: #5a5a62;
+  border-color: #5c5c66;
+  color: #fff;
 }
 
-.file-picker-btn {
+label.file-picker-btn {
   display: inline-block;
   cursor: pointer;
-  margin: 0.85rem 0.5rem 0.85rem 0;
-  padding: 0.45rem 0.9rem;
+  margin: 0.85rem 0.55rem 0.75rem 0;
+  padding: 0.48rem 0.95rem;
   border: 1px solid var(--wh-border-strong);
   border-radius: 0.55rem;
   background: var(--wh-bg-input);
@@ -185,12 +205,14 @@ button.outline:hover {
   font-size: 0.8125rem;
   font-weight: 500;
   line-height: 1.4;
+  box-shadow: none;
   transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
-.file-picker-btn:hover {
+label.file-picker-btn:hover {
   background: var(--wh-bg-hover);
-  border-color: #5a5a62;
+  border-color: #5c5c66;
+  color: #fff;
 }
 
 [data-tooltip]:not(a, button, input) {

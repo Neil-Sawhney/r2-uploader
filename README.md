@@ -27,7 +27,7 @@ And that's it, now we set up the workers.
 
 ### Set up the Worker 👷‍♂️
 
-A Worker is like the backend of a website, it allows the NEILS WORMHOLE to communicate with the R2 bucket. **This is the most important part of the setup, so please follow the steps carefully.**
+A Worker is like the backend of a website, it allows NEILS WORMHOLE to communicate with the R2 bucket. **This is the most important part of the setup, so please follow the steps carefully.**
 
 1. Go to [Cloudflare Dashboard](https://dash.cloudflare.com/).
 2. On the left panel, there is a section called "Workers & Pages". Click on it.
@@ -98,16 +98,16 @@ Workers and R2 both supports custom domain, and we just need one of them to make
 1. Go to [Cloudflare Dashboard](https://dash.cloudflare.com/).
 2. On the left panel, there is a section called "Workers & Pages". Click on it.
 3. Go to your Worker, click on the "Triggers", you'll see a custom domain section, click on the "Add Custom Domain" button. Input the domain name and you're done!
-4. Remember to replace the Endpoint in the NEILS WORMHOLE with the custom domain.
+4. Remember to replace the Endpoint in NEILS WORMHOLE with the custom domain.
 
 **For R2:**
 
 1. Go to [Cloudflare Dashboard](https://dash.cloudflare.com/).
 2. On the left panel, there is a section called "R2". Click on it.
 3. Go to your bucket, click on the "Settings", find "Custom Domains" section, and then click on the "Connect Domain" button. Input the domain name just like you did in the Workers, and you're done!
-4. Remember to update the **Custom Domain** in the NEILS WORMHOLE with **the R2 custom domain**.
+4. Remember to update the **Custom Domain** in NEILS WORMHOLE with **the R2 custom domain**.
 
-   Attention! This time, instead of changing the Endpoint field in the NEILS WORMHOLE, we change the Custom Domain field with the R2 custom domain.
+   Attention! This time, instead of changing the Endpoint field in NEILS WORMHOLE, we change the Custom Domain field with the R2 custom domain.
 
    ![](https://r2-cf-api.jw1.dev/endpoint.png)
 
