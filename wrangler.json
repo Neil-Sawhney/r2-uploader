@@ -1,12 +1,11 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
   "name": "r2-uploader",
   "account_id": "f9b56530b83d8e3412943ccf1ea9057b",
+  "main": "src/index.js",
   "compatibility_date": "2026-09-11",
   "compatibility_flags": ["nodejs_compat"],
   "workers_dev": true,
   "preview_urls": true,
-  "main": "./server/index.js",
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",

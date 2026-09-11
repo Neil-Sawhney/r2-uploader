@@ -9,6 +9,18 @@ Live targets:
 
 Both must return `text/html` **R2 Uploader** (same UX as https://r2.jw1.dev/), not `text/plain` `Hello world`.
 
+## Why commit `4c9984b` can be the active deployment and still serve Hello World
+
+The dashboard Hello World / C3 template entrypoint is **`src/index.js`** (`return new Response("Hello world")`). This repo did not have that file. `wrangler.jsonc` pointed at `cloudflare/worker.js` / `server/index.js` instead.
+
+Workers Builds tagged production with the git SHA, but the script Cloudflare kept serving is the **dashboard template module**, not `wrangler.jsonc` `main`. A green build + “deployed from 4c9984b” does not mean `cloudflare/worker.js` + `dist/` were published.
+
+This repo now uses the template path:
+
+- **`src/index.js`** — real Worker (replaces Hello World)
+- **`wrangler.json`** — strict JSON, `main: src/index.js`, `assets.directory: ./dist`
+- **`npm run deploy`** — `vite build` then `wrangler deploy --assets=./dist` (CLI flag forces asset upload)
+
 ## Why Workers Builds can be green while production is still Hello World
 
 Verified: both hostnames are the **`r2-uploader` Worker**. The edge script is still Cloudflare’s default Hello World template.
@@ -18,7 +30,7 @@ Workers Builds is a **two-step** pipeline ([docs](https://developers.cloudflare.
 1. **Build command** (optional) — e.g. `npm run build`. A successful Vite build makes the GitHub check green.
 2. **Deploy command** — this is what replaces the **active** Worker. Default is `npx wrangler deploy`.
 
-Workers Builds **does not honor** `build.command` inside `wrangler.jsonc`. Only the dashboard Build / Deploy commands matter.
+Workers Builds **does not honor** `build.command` inside Wrangler config. Only the dashboard Build / Deploy commands matter.
 
 A green “Workers Builds: r2-uploader” check therefore does **not** prove the Hello World script was replaced. Typical dashboard settings that produce this:
 
@@ -52,7 +64,7 @@ Workers & Pages → **r2-uploader** → **Settings** → **Build**:
 | Production branch | `main` |
 | Root directory | `/` (empty / repo root) |
 | Build command | `npm run build` |
-| **Deploy command** | `npm run deploy` |
+| **Deploy command** | `npx wrangler deploy --assets=./dist` **or** `npm run deploy` |
 | Non-production deploy | `npx wrangler versions upload` (previews only) |
 | Node.js | `20` (`NODE_VERSION=20`) |
 | Package manager | npm |
