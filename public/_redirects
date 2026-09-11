@@ -1,3 +1,0 @@
-# Classic Cloudflare Pages: serve the SPA for unknown routes.
-# Existing files (including /setup-guide/) are served first.
-/*    /index.html   200

@@ -62,7 +62,7 @@ npm run deploy
 | Environment variable | `NODE_VERSION=20` |
 | Package manager | npm |
 
-`functions/api/[[path]].js` provides `/api/*` on classic Pages. `public/_redirects` falls unknown routes back to the SPA.
+`functions/api/[[path]].js` provides `/api/*` on classic Pages. Unknown UI routes fall back to the SPA via `assets.not_found_handling = "single-page-application"` in `wrangler.jsonc`.
 
 ## Environment variables (optional)
 
