@@ -26,3 +26,6 @@ jobs:
 
       - name: Verify dist is the R2 Uploader app
         run: npm run verify:dist
+
+      - name: Verify short links
+        run: npm run verify:shortlink

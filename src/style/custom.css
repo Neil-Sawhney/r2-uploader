@@ -340,6 +340,69 @@ pre code {
   color: var(--wh-text);
 }
 
+.uploaded-share-meta {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.uploaded-short-slug {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.7rem;
+  color: var(--wh-success);
+}
+
+.uploaded-short-error {
+  font-size: 0.7rem;
+  color: var(--wh-danger);
+}
+
+.upload-short-name {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding-top: 0.45rem;
+}
+
+.upload-short-name label {
+  margin-bottom: 0;
+}
+
+.upload-short-origin {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  color: var(--wh-text-muted);
+}
+
+.upload-short-name input[type="text"] {
+  flex: 1;
+  min-width: 7.5rem;
+  margin: 0;
+  height: auto;
+  padding: 0.2rem 0.4rem;
+}
+
+.upload-short-hint {
+  width: 100%;
+  margin: 0.1rem 0 0;
+  font-size: 0.72rem;
+  color: var(--wh-text-muted);
+}
+
+.upload-short-hint.is-error {
+  color: var(--wh-danger);
+}
+
+.upload-short-hint.is-success {
+  color: var(--wh-success);
+}
+
 .share-overlay {
   position: fixed;
   inset: 0;

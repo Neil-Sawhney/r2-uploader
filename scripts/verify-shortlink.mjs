@@ -4,6 +4,7 @@ import {
   slugKey,
   validateSlug,
 } from "../src/utils/shortSlug.js";
+import { prepareShortLink } from "../src/utils/shortLinkClient.js";
 import shortlink from "../api/shortlink.js";
 
 function fail(message) {
@@ -33,6 +34,27 @@ if (shortUrlForSlug("coolname", "https://wormhole.neilneilneil.com/") !== "https
 
 if (slugKey("Cool") !== "s:cool") {
   fail("slugKey should prefix a normalized slug");
+}
+
+if (prepareShortLink("", "https://r2.example/file.exe").skipped !== true) {
+  fail("empty short name should skip creating a link");
+}
+
+const prepared = prepareShortLink(" CoolName ", "https://r2.example/file.exe");
+if (prepared.slug !== "coolname" || prepared.target !== "https://r2.example/file.exe") {
+  fail("prepareShortLink should normalize a valid slug");
+}
+
+if (!prepareShortLink("api", "https://r2.example/file.exe").error) {
+  fail("prepareShortLink should reject reserved slugs");
+}
+
+if (!prepareShortLink("cool name", "https://r2.example/file.exe").error) {
+  fail("prepareShortLink should reject spaces");
+}
+
+if (!prepareShortLink("coolname", "").error) {
+  fail("prepareShortLink should require a public URL");
 }
 
 const mem = new Map();
