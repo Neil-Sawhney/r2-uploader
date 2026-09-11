@@ -82,7 +82,14 @@ const copyUrl = async () => {
   }
 
   try {
-    await navigator.clipboard.writeText(props.url);
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(props.url);
+    } else {
+      const input = document.getElementById("share-url");
+      input?.focus();
+      input?.select();
+      document.execCommand("copy");
+    }
     copyLabel.value = "Copied";
     clearTimeout(copyReset);
     copyReset = setTimeout(() => {
@@ -90,6 +97,9 @@ const copyUrl = async () => {
     }, 2000);
   } catch (err) {
     console.error(err);
+    const input = document.getElementById("share-url");
+    input?.focus();
+    input?.select();
     copyLabel.value = "Failed";
     clearTimeout(copyReset);
     copyReset = setTimeout(() => {

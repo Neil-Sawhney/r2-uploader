@@ -278,6 +278,10 @@ pre code {
   }
 }
 
+.file-row {
+  gap: 0.5rem;
+}
+
 .file-actions {
   display: flex;
   align-items: center;

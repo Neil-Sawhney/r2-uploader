@@ -132,12 +132,12 @@
               >
             </div>
             <div
-              class="item mb-2 rounded text-sm py-1 flex items-center justify-between"
+              class="item file-row mb-2 rounded text-sm py-1 flex items-center justify-between"
               :class="seeFolderStructure ? 'pl-4' : ''"
               v-for="item in dirMap[folder.name]"
               :key="item.key"
             >
-              <div class="w-[2rem]" v-show="selectMode">
+              <div class="w-[2rem] shrink-0" v-show="selectMode">
                 <input
                   type="checkbox"
                   @change="updateSelectedFiles(item, folder.name)"
@@ -146,10 +146,7 @@
                 />
               </div>
               <div
-                class="name whitespace-nowrap text-left text-ellipsis overflow-hidden break-all"
-                :style="{
-                  width: selectMode ? 'calc(100% - 2rem)' : 'calc(100% - 8.5rem)',
-                }"
+                class="name min-w-0 flex-1 whitespace-nowrap text-left text-ellipsis overflow-hidden break-all"
               >
                 <div class="w-full overflow-hidden text-ellipsis whitespace-nowrap">
                   <a
