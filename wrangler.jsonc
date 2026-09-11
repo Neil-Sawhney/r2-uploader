@@ -1,23 +1,18 @@
 {
-  "$schema": "https://unpkg.com/wrangler@4/config-schema.json",
-  // Static Vite SPA for Cloudflare Workers + Assets / Pages.
-  // Do not add a Hello-World `main` worker — that is what wormhole.neilneilneil.com
-  // is currently serving (text/plain "Hello world") instead of this app.
+  "$schema": "node_modules/wrangler/config-schema.json",
   "name": "r2-uploader",
+  "account_id": "f9b56530b83d8e3412943ccf1ea9057b",
   "compatibility_date": "2026-09-11",
   "compatibility_flags": ["nodejs_compat"],
-  "main": "./cloudflare/worker.js",
+  "workers_dev": true,
+  "preview_urls": true,
+  "main": "./server/index.js",
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
     "not_found_handling": "single-page-application",
     "run_worker_first": ["/api/*"]
   },
-  "build": {
-    "command": "npm run build"
-  },
-  // Bind the live hostname to THIS Worker so it replaces the leftover
-  // Hello World origin currently serving wormhole.neilneilneil.com.
   "routes": [
     {
       "pattern": "wormhole.neilneilneil.com",

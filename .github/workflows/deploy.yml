@@ -1,0 +1,49 @@
+name: Deploy Worker
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Verify dist is the R2 Uploader app
+        run: npm run verify:dist
+
+      - name: Check for Cloudflare API token
+        id: token
+        env:
+          TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::CLOUDFLARE_API_TOKEN is not set. GitHub cannot replace the live Hello World Worker. Add a token with Account.Workers Scripts:Edit (see CLOUDFLARE.md) or set the Worker deploy command to: npm run deploy"
+            exit 0
+          fi
+          echo "present=true" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy to Cloudflare Workers
+        if: steps.token.outputs.present == 'true'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: f9b56530b83d8e3412943ccf1ea9057b
+          command: deploy
