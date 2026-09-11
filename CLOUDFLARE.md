@@ -66,7 +66,7 @@ Workers & Pages → **r2-uploader** → **Settings** → **Build**:
 | Build command | `npm run build` |
 | **Deploy command** | `npx wrangler deploy --assets=./dist` **or** `npm run deploy` |
 | Non-production deploy | `npx wrangler versions upload` (previews only) |
-| Node.js | `20` (`NODE_VERSION=20`) |
+| Node.js | `22` (from `.nvmrc` / `.node-version`; or env `NODE_VERSION=22`). Wrangler requires Node >= 22. |
 | Package manager | npm |
 
 `npm run deploy` runs `vite build` then `wrangler deploy`, which **promotes** the new version to 100% traffic.
