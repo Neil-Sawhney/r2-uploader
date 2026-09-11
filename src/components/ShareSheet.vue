@@ -76,35 +76,43 @@ const selectInput = (event) => {
   event.target.select();
 };
 
+const selectShareInput = () => {
+  const input = document.getElementById("share-url");
+  input?.focus();
+  input?.select();
+};
+
 const copyUrl = async () => {
   if (!props.url) {
     return;
   }
 
+  copyLabel.value = "Copied";
+  clearTimeout(copyReset);
+  copyReset = setTimeout(() => {
+    copyLabel.value = "Copy";
+  }, 2000);
+
+  selectShareInput();
+
   try {
-    if (navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(props.url);
-    } else {
-      const input = document.getElementById("share-url");
-      input?.focus();
-      input?.select();
+    if (!navigator.clipboard?.writeText) {
       document.execCommand("copy");
+      return;
     }
-    copyLabel.value = "Copied";
-    clearTimeout(copyReset);
-    copyReset = setTimeout(() => {
-      copyLabel.value = "Copy";
-    }, 2000);
+
+    await Promise.race([
+      navigator.clipboard.writeText(props.url),
+      new Promise((_, reject) => {
+        setTimeout(() => reject(new Error("clipboard timeout")), 500);
+      }),
+    ]);
   } catch (err) {
-    console.error(err);
-    const input = document.getElementById("share-url");
-    input?.focus();
-    input?.select();
-    copyLabel.value = "Failed";
-    clearTimeout(copyReset);
-    copyReset = setTimeout(() => {
-      copyLabel.value = "Copy";
-    }, 2000);
+    try {
+      document.execCommand("copy");
+    } catch (copyErr) {
+      console.error(err, copyErr);
+    }
   }
 };
 
