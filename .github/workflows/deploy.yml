@@ -31,6 +31,9 @@ jobs:
       - name: Verify short link helpers
         run: npm run verify:shortlink
 
+      - name: Verify expiry and prune
+        run: npm run verify:expiry
+
       - name: Check for Cloudflare API token
         id: token
         env:

@@ -19,7 +19,8 @@
     "deploy:vercel": "npm run build:setup && vercel --prod",
     "clean": "rm -rf dist",
     "verify:dist": "node scripts/verify-dist.mjs",
-    "verify:shortlink": "node scripts/verify-shortlink.mjs"
+    "verify:shortlink": "node scripts/verify-shortlink.mjs",
+    "verify:expiry": "node scripts/verify-expiry.mjs"
   },
   "dependencies": {
     "autoprefixer": "^10.4.20",

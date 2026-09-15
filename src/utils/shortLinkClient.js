@@ -19,7 +19,7 @@ export function prepareShortLink(slugInput, target) {
   return { slug, target };
 }
 
-export async function saveShortLink(slugInput, target) {
+export async function saveShortLink(slugInput, target, expiresAt = null) {
   const prepared = prepareShortLink(slugInput, target);
   if (prepared.skipped) {
     return prepared;
@@ -32,6 +32,7 @@ export async function saveShortLink(slugInput, target) {
     const res = await axios.put("/api/shortlink", {
       slug: prepared.slug,
       target: prepared.target,
+      expiresAt: expiresAt || null,
     });
     return { slug: res.data.slug, target: res.data.target };
   } catch (err) {
