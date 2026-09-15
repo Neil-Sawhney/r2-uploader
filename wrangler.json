@@ -17,6 +17,9 @@
       "binding": "SHORT_LINKS"
     }
   ],
+  "triggers": {
+    "crons": ["0 * * * *"]
+  },
   "routes": [
     {
       "pattern": "wormhole.neilneilneil.com",

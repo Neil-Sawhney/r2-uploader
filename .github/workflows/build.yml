@@ -29,3 +29,6 @@ jobs:
 
       - name: Verify short links
         run: npm run verify:shortlink
+
+      - name: Verify expiry and prune
+        run: npm run verify:expiry

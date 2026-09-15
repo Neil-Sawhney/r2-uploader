@@ -288,6 +288,25 @@
               Applies to the first uploaded file.
             </p>
           </div>
+          <div class="upload-expiry">
+            <label class="text-xs whitespace-nowrap" for="uploadExpiry">
+              Expires
+            </label>
+            <select
+              id="uploadExpiry"
+              class="text-xs"
+              v-model="uploadExpiryPreset"
+              :disabled="uploading"
+            >
+              <option
+                v-for="preset in expiryPresets"
+                :key="preset.id"
+                :value="preset.id"
+              >
+                {{ preset.label }}
+              </option>
+            </select>
+          </div>
         </div>
 
         <div class="pt-4 pb-2 text-xs" v-show="fileList.length">Files Queued:</div>
@@ -391,6 +410,12 @@ import Compressor from "compressorjs";
 import { filePublicUrl } from "../utils/fileUrl.js";
 import { saveShortLink, slugIsTaken } from "../utils/shortLinkClient.js";
 import { normalizeSlug, validateSlug } from "../utils/shortSlug.js";
+import {
+  DEFAULT_EXPIRY_PRESET,
+  EXPIRY_PRESETS,
+  expiresAtFromPreset,
+} from "../utils/expiry.js";
+import { saveExpiry } from "../utils/expiryClient.js";
 
 let statusStore = useStatusStore();
 
@@ -416,8 +441,13 @@ let uploadShortName = ref("");
 let uploadShortNameHint = ref("");
 let uploadShortNameHintKind = ref("");
 let uploadedShortMeta = ref({});
+let uploadedExpiryMeta = ref({});
 let pendingUploadSlug = "";
 let shortLinkAssigned = false;
+let uploadExpiryPreset = ref(DEFAULT_EXPIRY_PRESET);
+let pendingUploadExpiryPreset = DEFAULT_EXPIRY_PRESET;
+let pendingUploadExpiresAt = null;
+const expiryPresets = EXPIRY_PRESETS;
 
 const shortNameOrigin = computed(() => {
   try {
@@ -445,6 +475,9 @@ let shareUploaded = function (file) {
   statusStore.openShare({
     fileName: publicKey,
     url: filePublicUrl(publicKey),
+    objectKey: publicKey,
+    size: file.size,
+    expiresAt: uploadedExpiryMeta.value[file.key] ?? pendingUploadExpiresAt,
   });
 };
 
@@ -452,6 +485,7 @@ let markUploadedFile = function (file) {
   uploadedList.value.push(file);
   fileList.value = fileList.value.filter((item) => item.key !== file.key);
   assignPendingShortLink(file);
+  assignPendingExpiry(file);
 };
 
 let assignPendingShortLink = async function (file) {
@@ -460,7 +494,11 @@ let assignPendingShortLink = async function (file) {
   }
 
   shortLinkAssigned = true;
-  const result = await saveShortLink(pendingUploadSlug, uploadedPublicUrl(file));
+  const result = await saveShortLink(
+    pendingUploadSlug,
+    uploadedPublicUrl(file),
+    pendingUploadExpiresAt,
+  );
   if (result.slug) {
     uploadedShortMeta.value = {
       ...uploadedShortMeta.value,
@@ -480,9 +518,40 @@ let assignPendingShortLink = async function (file) {
   uploadShortNameHintKind.value = "error";
 };
 
+let expiryWriteChain = Promise.resolve();
+
+let assignPendingExpiry = function (file) {
+  if (!pendingUploadExpiresAt) {
+    return;
+  }
+
+    expiryWriteChain = expiryWriteChain
+      .then(async () => {
+        const publicKey = renameFileWithRandomId.value
+          ? formatFileName(file.id_key)
+          : formatFileName(file.key);
+        const result = await saveExpiry({
+          key: publicKey,
+          target: uploadedPublicUrl(file),
+          preset: pendingUploadExpiryPreset,
+          expiresAt: pendingUploadExpiresAt,
+          size: file.size,
+        });
+        if (!result?.error) {
+          uploadedExpiryMeta.value = {
+            ...uploadedExpiryMeta.value,
+            [file.key]: result.expiresAt ?? pendingUploadExpiresAt,
+          };
+          statusStore.setFileExpiry(publicKey, result.expiresAt ?? pendingUploadExpiresAt);
+        }
+      })
+      .catch(() => {});
+};
+
 let clearUploadedFiles = function () {
   uploadedList.value = [];
   uploadedShortMeta.value = {};
+  uploadedExpiryMeta.value = {};
   progressMap.value = {};
   statusMap.value = {};
   abortControllerMap.value = {};
@@ -840,6 +909,8 @@ const upload = async function () {
 
   pendingUploadSlug = slug;
   shortLinkAssigned = false;
+  pendingUploadExpiryPreset = uploadExpiryPreset.value;
+  pendingUploadExpiresAt = expiresAtFromPreset(pendingUploadExpiryPreset);
   uploadShortNameHint.value = "";
   uploadShortNameHintKind.value = "";
   uploading.value = true;
