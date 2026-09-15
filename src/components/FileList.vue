@@ -51,6 +51,12 @@
       >
         Seems like we got nothing here.
       </div>
+      <div
+        class="text-xs mb-3 text-[#8e8e96]"
+        v-show="!loading && fileList.length > 0 && Object.keys(dirMap).length === 0"
+      >
+        No files match this filter.
+      </div>
       <div class="text-red-500 text-xs" v-show="loadDataErrorText">
         {{ loadDataErrorText }}
 
@@ -73,15 +79,29 @@
         </div>
       </div>
 
-      <div class="text-xs mb-2" v-show="fileList.length > 0">
-        Sort by
-        <select class="text-xs inline-block w-[10rem] mb-0" v-model="sort">
-          <option value="0">Bucket order</option>
-          <option value="1">Date (newest first)</option>
-          <option value="2">Date (oldest first)</option>
-          <option value="3">Size (largest first)</option>
-          <option value="4">Size (smallest first)</option>
-        </select>
+      <div class="file-list-controls" v-show="fileList.length > 0">
+        <label class="file-list-control">
+          Sort
+          <select class="text-xs mb-0" v-model="sort">
+            <option value="0">Bucket order</option>
+            <option value="1">Date (newest first)</option>
+            <option value="2">Date (oldest first)</option>
+            <option value="3">Size (largest first)</option>
+            <option value="4">Size (smallest first)</option>
+            <option value="5">Expiry (soonest)</option>
+            <option value="6">Expiry (never first)</option>
+          </select>
+        </label>
+        <label class="file-list-control">
+          Show
+          <select class="text-xs mb-0" v-model="listFilter">
+            <option value="all">All</option>
+            <option value="never">Never expire</option>
+            <option value="expiring">Expiring</option>
+            <option value="expired">Expired</option>
+            <option value="large">Large (50 MB+)</option>
+          </select>
+        </label>
       </div>
 
       <div class="pb-4" v-show="fileList.length > 0">
@@ -145,10 +165,10 @@
                   :id="item.key"
                 />
               </div>
-              <div
-                class="name min-w-0 flex-1 whitespace-nowrap text-left text-ellipsis overflow-hidden break-all"
-              >
-                <div class="w-full overflow-hidden text-ellipsis whitespace-nowrap">
+              <div class="file-row-main min-w-0 flex-1">
+                <div
+                  class="name min-w-0 w-full whitespace-nowrap text-left text-ellipsis overflow-hidden break-all"
+                >
                   <a
                     :href="filePublicUrl(item.key, customDomain, endPoint)"
                     target="_blank"
@@ -158,6 +178,17 @@
                   <label v-show="selectMode" :for="item.key" class="mb-0">{{
                     item.fileName
                   }}</label>
+                </div>
+                <div class="file-row-meta">
+                  <span>{{ parseByteSize(item.size || 0) }}</span>
+                  <span
+                    class="file-expiry"
+                    :class="{
+                      'is-expired': item.expiryState === 'expired',
+                      'is-never': item.expiryState === 'never',
+                    }"
+                    >{{ item.expiryLabel }}</span
+                  >
                 </div>
               </div>
               <div class="file-actions" v-show="!selectMode">
@@ -206,8 +237,19 @@ import { useStatusStore } from "../store/status";
 import { storeToRefs } from "pinia";
 import { nanoid } from "nanoid";
 import { filePublicUrl } from "../utils/fileUrl.js";
+import {
+  LARGE_FILE_BYTES,
+  formatExpiryLabel,
+  isExpired,
+  sortExpiryValue,
+} from "../utils/expiry.js";
+import { deleteExpiry, fetchExpiryIndex, requestPrune } from "../utils/expiryClient.js";
+import { deleteR2Object } from "../utils/r2Client.js";
 
 let sort = ref("1");
+let listFilter = ref("all");
+let expiryByKey = ref({});
+let silentPruneRunning = false;
 
 onMounted(() => {
   if (localStorage.getItem("seeFolderStructure") === "1") {
@@ -217,11 +259,19 @@ onMounted(() => {
   if (localStorage.getItem("seeFolderStructure") === "0") {
     seeFolderStructure.value = false;
   }
+
+  restoreFilterSelection();
+  silentPrune();
 });
 
 watch(sort, function (val) {
   localStorage.setItem("sort", val);
 
+  mapFilesToDir();
+});
+
+watch(listFilter, function (val) {
+  localStorage.setItem("listFilter", val);
   mapFilesToDir();
 });
 
@@ -241,30 +291,77 @@ function getSortVariables(val) {
   } else if (val === "4") {
     sortKey = "size";
     sortType = "asc";
+  } else if (val === "5") {
+    sortKey = "expires_sort";
+    sortType = "soonest";
+  } else if (val === "6") {
+    sortKey = "expires_sort";
+    sortType = "never-first";
   }
 
   return { sortKey, sortType };
 }
 
+function fileExpiresAt(file) {
+  if (Object.prototype.hasOwnProperty.call(expiryByKey.value, file.key)) {
+    return expiryByKey.value[file.key];
+  }
+  return file.expiresAt ?? null;
+}
+
+function matchesListFilter(file) {
+  const expiresAt = fileExpiresAt(file);
+  if (listFilter.value === "never") {
+    return !expiresAt;
+  }
+  if (listFilter.value === "expiring") {
+    return Boolean(expiresAt) && !isExpired(expiresAt);
+  }
+  if (listFilter.value === "expired") {
+    return isExpired(expiresAt);
+  }
+  if (listFilter.value === "large") {
+    return (file.size || 0) >= LARGE_FILE_BYTES;
+  }
+  return true;
+}
+
 let sortFileList = function (sortKey, sortType) {
-  let temp = JSON.parse(JSON.stringify(fileList.value));
-  temp.map((el) => {
-    return (el.uploaded_timestamp = new Date(el.uploaded).getTime());
+  let temp = fileList.value.map((el) => {
+    const expiresAt = fileExpiresAt(el);
+    return {
+      ...el,
+      expiresAt,
+      uploaded_timestamp: el.uploaded ? new Date(el.uploaded).getTime() : 0,
+      expires_sort: expiresAt,
+      expiryLabel: formatExpiryLabel(expiresAt),
+      expiryState: !expiresAt ? "never" : isExpired(expiresAt) ? "expired" : "expiring",
+    };
   });
+
+  if (!sortKey) {
+    return temp.filter(matchesListFilter);
+  }
 
   temp = temp.sort((a, b) => {
-    if (sortType === "desc") {
-      return b[sortKey] - a[sortKey];
-    } else {
-      return a[sortKey] - b[sortKey];
+    if (sortKey === "expires_sort") {
+      const mode = sortType === "never-first" ? "never-first" : "soonest";
+      if (mode === "never-first" && Boolean(a.expiresAt) !== Boolean(b.expiresAt)) {
+        return a.expiresAt ? 1 : -1;
+      }
+      return sortExpiryValue(a.expiresAt, mode) - sortExpiryValue(b.expiresAt, mode);
     }
+    if (sortType === "desc") {
+      return (b[sortKey] || 0) - (a[sortKey] || 0);
+    }
+    return (a[sortKey] || 0) - (b[sortKey] || 0);
   });
 
-  return temp;
+  return temp.filter(matchesListFilter);
 };
 
 let statusStore = useStatusStore();
-let { uploading, endPointUpdated } = storeToRefs(statusStore);
+let { uploading, endPointUpdated, expiryRevision } = storeToRefs(statusStore);
 
 let selectMode = ref(false);
 
@@ -279,6 +376,13 @@ watch(uploading, (newVal) => {
     customDomain = localStorage.getItem("customDomain");
     loadData();
   }
+});
+
+watch(expiryRevision, () => {
+  Object.entries(statusStore.expiryOverrides || {}).forEach(([key, value]) => {
+    expiryByKey.value[key] = value;
+  });
+  mapFilesToDir();
 });
 
 watch(endPointUpdated, (newVal) => {
@@ -342,13 +446,21 @@ function restoreSortSelection() {
   let sortFromLocal = localStorage.getItem("sort");
 
   // check local value is valid
-  if (!["0", "1", "2", "3", "4"].includes(sortFromLocal)) {
+  if (!["0", "1", "2", "3", "4", "5", "6"].includes(sortFromLocal)) {
     return false;
   }
 
   if (sortFromLocal) {
     sort.value = sortFromLocal;
   }
+}
+
+function restoreFilterSelection() {
+  let filterFromLocal = localStorage.getItem("listFilter");
+  if (!["all", "never", "expiring", "expired", "large"].includes(filterFromLocal)) {
+    return;
+  }
+  listFilter.value = filterFromLocal;
 }
 
 let selectedFiles = ref([]);
@@ -387,6 +499,9 @@ function openShare(item) {
   statusStore.openShare({
     fileName: item.fileName || item.key,
     url: filePublicUrl(item.key, customDomain, endPoint),
+    objectKey: item.key,
+    size: item.size || 0,
+    expiresAt: fileExpiresAt(item),
   });
 }
 
@@ -457,6 +572,12 @@ async function parseDirs(file) {
     let item = {
       fileName: fileName,
       key: file.key,
+      size: file.size || 0,
+      uploaded: file.uploaded,
+      expiresAt: file.expiresAt ?? null,
+      expiryLabel: file.expiryLabel,
+      expiryState: file.expiryState,
+      selected: file.selected,
     };
     if (dirMap.value[dirKey]) {
       dirMap.value[dirKey].push(item);
@@ -467,6 +588,12 @@ async function parseDirs(file) {
     let item = {
       fileName: file.key,
       key: file.key,
+      size: file.size || 0,
+      uploaded: file.uploaded,
+      expiresAt: file.expiresAt ?? null,
+      expiryLabel: file.expiryLabel,
+      expiryState: file.expiryState,
+      selected: file.selected,
     };
     if (dirMap.value["/"]) {
       dirMap.value["/"].push(item);
@@ -485,10 +612,8 @@ async function mapFilesToDir() {
   let { sortKey, sortType } = getSortVariables(sort.value);
   let temp = sortFileList(sortKey, sortType);
 
-  fileList.value = temp;
-
   await Promise.all(
-    fileList.value.map(async (item) => {
+    temp.map(async (item) => {
       await parseDirs(item);
     }),
   );
@@ -536,6 +661,8 @@ let deleteThisFile = function (key, isBatchDelete = false, options = {}) {
     .then(async () => {
       deletingKey.value = "";
       fileList.value = fileList.value.filter((item) => item.key !== key);
+      delete expiryByKey.value[key];
+      deleteExpiry(key, filePublicUrl(key, customDomain, endPoint));
       await mapFilesToDir();
 
       if (options.callback) {
@@ -570,18 +697,33 @@ async function loadData(action) {
 
     if (!endPoint || !apiKey) {
       loading.value = false;
+      silentPrune();
       return false;
     }
 
-    const res = await axios({
-      method: "patch",
-      headers: {
-        "x-api-key": apiKey,
-      },
-      url:
-        endPoint +
-        (action === "more" && globalCursor.value ? "?cursor=" + globalCursor.value : ""),
+    const [res, expiryItems] = await Promise.all([
+      axios({
+        method: "patch",
+        headers: {
+          "x-api-key": apiKey,
+        },
+        url:
+          endPoint +
+          (action === "more" && globalCursor.value ? "?cursor=" + globalCursor.value : ""),
+      }),
+      fetchExpiryIndex(),
+    ]);
+
+    const nextExpiry = {};
+    expiryItems.forEach((item) => {
+      if (item?.key) {
+        nextExpiry[item.key] = item.expiresAt ?? null;
+      }
     });
+    Object.entries(statusStore.expiryOverrides || {}).forEach(([key, value]) => {
+      nextExpiry[key] = value;
+    });
+    expiryByKey.value = nextExpiry;
 
     if (globalCursor.value && action === "more") {
       fileList.value.push(...res.data.objects);
@@ -595,8 +737,10 @@ async function loadData(action) {
       globalCursor.value = "";
     }
 
-    await restoreSortSelection();
+    restoreSortSelection();
+    restoreFilterSelection();
     await mapFilesToDir();
+    silentPrune();
 
     return true;
   } catch (e) {
@@ -620,17 +764,98 @@ async function seedPreviewShare() {
   }
 
   endPoint = endPoint || "https://cdn.example.com/";
+  const now = Date.now();
   fileList.value = [
     {
       key: "demo/hello.txt",
       fileName: "hello.txt",
       size: 42,
-      uploaded: new Date().toISOString(),
+      uploaded: new Date(now - 3600_000).toISOString(),
+    },
+    {
+      key: "keep/forever.bin",
+      fileName: "forever.bin",
+      size: 1280,
+      uploaded: new Date(now - 86400_000).toISOString(),
+    },
+    {
+      key: "soon/clip.mp4",
+      fileName: "clip.mp4",
+      size: 52_000_000,
+      uploaded: new Date(now - 7200_000).toISOString(),
+    },
+    {
+      key: "old/expired.txt",
+      fileName: "expired.txt",
+      size: 4200,
+      uploaded: new Date(now - 10800_000).toISOString(),
     },
   ];
+  expiryByKey.value = {
+    "soon/clip.mp4": now + 3600_000,
+    "old/expired.txt": now - 1000,
+  };
   loadDataErrorText.value = "";
   loadDataErrorStack.value = "";
+  restoreSortSelection();
+  restoreFilterSelection();
   await mapFilesToDir();
+}
+
+async function silentPrune() {
+  if (silentPruneRunning) {
+    return;
+  }
+  silentPruneRunning = true;
+  try {
+    const expired = await requestPrune();
+    if (!expired.length) {
+      return;
+    }
+
+    const currentEndPoint = localStorage.getItem("endPoint");
+    const currentApiKey = localStorage.getItem("apiKey");
+    const removed = [];
+    if (currentEndPoint && currentApiKey) {
+      const results = await Promise.allSettled(
+        expired.map(async (item) => {
+          try {
+            await deleteR2Object(item.key, {
+              endPoint: currentEndPoint,
+              apiKey: currentApiKey,
+            });
+          } catch (err) {
+            if (err.response?.status !== 404) {
+              throw err;
+            }
+          }
+          await deleteExpiry(item.key, item.target);
+          return item.key;
+        }),
+      );
+      results.forEach((result) => {
+        if (result.status === "fulfilled" && result.value) {
+          removed.push(result.value);
+        }
+      });
+    }
+
+    if (!removed.length) {
+      return;
+    }
+
+    const keys = new Set(removed);
+    const before = fileList.value.length;
+    fileList.value = fileList.value.filter((file) => !keys.has(file.key));
+    keys.forEach((key) => {
+      delete expiryByKey.value[key];
+    });
+    if (fileList.value.length !== before) {
+      await mapFilesToDir();
+    }
+  } finally {
+    silentPruneRunning = false;
+  }
 }
 
 loadData().then(seedPreviewShare);

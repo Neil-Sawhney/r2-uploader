@@ -43,6 +43,30 @@
         </div>
         <p v-if="slugHint" class="share-hint">{{ slugHint }}</p>
 
+        <label class="share-label" for="share-expiry">Expires</label>
+        <select
+          id="share-expiry"
+          class="share-expiry"
+          v-model="expiryPreset"
+          :disabled="savingExpiry || !objectKey"
+          @change="saveExpiryPreset"
+        >
+          <option
+            v-if="currentExpiresAt && !isExpired(currentExpiresAt)"
+            value="current"
+          >
+            Keep ({{ formatExpiryLabel(currentExpiresAt) }})
+          </option>
+          <option
+            v-for="preset in EXPIRY_PRESETS"
+            :key="preset.id"
+            :value="preset.id"
+          >
+            {{ preset.label }}
+          </option>
+        </select>
+        <p class="share-hint">{{ expiryHint }}</p>
+
         <label class="share-label" for="share-url">{{ primaryLabel }}</label>
         <div class="share-url-row">
           <input
@@ -97,14 +121,25 @@ import { computed, nextTick, onUnmounted, ref, watch } from "vue";
 import QRCode from "qrcode";
 import axios from "axios";
 import { normalizeSlug, shortUrlForSlug, validateSlug } from "../utils/shortSlug.js";
+import {
+  DEFAULT_EXPIRY_PRESET,
+  EXPIRY_PRESETS,
+  expiresAtFromPreset,
+  formatExpiryLabel,
+  isExpired,
+} from "../utils/expiry.js";
+import { saveExpiry } from "../utils/expiryClient.js";
 
 const props = defineProps({
   open: { type: Boolean, default: false },
   fileName: { type: String, default: "" },
   url: { type: String, default: "" },
+  objectKey: { type: String, default: "" },
+  size: { type: Number, default: 0 },
+  expiresAt: { type: Number, default: null },
 });
 
-const emit = defineEmits(["close"]);
+const emit = defineEmits(["close", "expiry-saved"]);
 
 const canvasEl = ref(null);
 const copyLabel = ref("Copy");
@@ -114,6 +149,10 @@ const savedSlug = ref("");
 const slugHint = ref("");
 const slugButton = ref("Save");
 const savingSlug = ref(false);
+const expiryPreset = ref(DEFAULT_EXPIRY_PRESET);
+const currentExpiresAt = ref(null);
+const savingExpiry = ref(false);
+const expiryHint = ref("");
 let copyReset = null;
 
 const originHost = computed(() => location.host);
@@ -216,6 +255,76 @@ const loadExistingSlug = async () => {
   }
 };
 
+const loadExistingExpiry = async () => {
+  currentExpiresAt.value = props.expiresAt ?? null;
+  expiryHint.value = currentExpiresAt.value
+    ? isExpired(currentExpiresAt.value)
+      ? "This file has expired."
+      : `Expires in ${formatExpiryLabel(currentExpiresAt.value).toLowerCase()}.`
+    : "Never expires.";
+  expiryPreset.value = currentExpiresAt.value && !isExpired(currentExpiresAt.value)
+    ? "current"
+    : DEFAULT_EXPIRY_PRESET;
+
+  if (!props.objectKey) {
+    return;
+  }
+
+  try {
+    const res = await axios.get("/api/expiry", {
+      params: { key: props.objectKey },
+      validateStatus: (status) => status < 500,
+    });
+    if (res.status === 200 && res.data?.expiresAt != null) {
+      currentExpiresAt.value = res.data.expiresAt;
+      expiryPreset.value = isExpired(currentExpiresAt.value)
+        ? DEFAULT_EXPIRY_PRESET
+        : "current";
+      expiryHint.value = isExpired(currentExpiresAt.value)
+        ? "This file has expired."
+        : `Expires in ${formatExpiryLabel(currentExpiresAt.value).toLowerCase()}.`;
+    }
+  } catch {
+    // Keep the value passed in from the file row.
+  }
+};
+
+const saveExpiryPreset = async () => {
+  if (!props.objectKey || expiryPreset.value === "current") {
+    return;
+  }
+
+  savingExpiry.value = true;
+  expiryHint.value = "";
+  const expiresAt = expiresAtFromPreset(expiryPreset.value);
+  const result = await saveExpiry({
+    key: props.objectKey,
+    target: props.url,
+    preset: expiryPreset.value,
+    expiresAt,
+    size: props.size,
+  });
+  savingExpiry.value = false;
+
+  if (result?.error) {
+    expiryHint.value = result.error;
+    return;
+  }
+
+  currentExpiresAt.value = result.expiresAt ?? expiresAt;
+  expiryPreset.value =
+    currentExpiresAt.value && !isExpired(currentExpiresAt.value)
+      ? "current"
+      : DEFAULT_EXPIRY_PRESET;
+  expiryHint.value = currentExpiresAt.value
+    ? `Expires in ${formatExpiryLabel(currentExpiresAt.value).toLowerCase()}.`
+    : "Never expires.";
+  emit("expiry-saved", {
+    key: props.objectKey,
+    expiresAt: currentExpiresAt.value,
+  });
+};
+
 const saveSlug = async () => {
   const slug = normalizeSlug(slugInput.value);
   const error = validateSlug(slug);
@@ -234,6 +343,7 @@ const saveSlug = async () => {
     const res = await axios.put("/api/shortlink", {
       slug,
       target: props.url,
+      expiresAt: currentExpiresAt.value,
     });
     savedSlug.value = res.data.slug;
     slugInput.value = res.data.slug;
@@ -275,13 +385,13 @@ const onKeydown = (event) => {
 };
 
 watch(
-  () => [props.open, props.url],
+  () => [props.open, props.url, props.objectKey, props.expiresAt],
   async ([isOpen]) => {
     copyLabel.value = "Copy";
     fileCopyLabel.value = "Copy";
     if (isOpen) {
       document.addEventListener("keydown", onKeydown);
-      await loadExistingSlug();
+      await Promise.all([loadExistingSlug(), loadExistingExpiry()]);
       await drawQr();
     } else {
       document.removeEventListener("keydown", onKeydown);

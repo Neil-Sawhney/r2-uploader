@@ -22,7 +22,11 @@
       :open="statusStore.shareOpen"
       :file-name="statusStore.shareFileName"
       :url="statusStore.shareUrl"
+      :object-key="statusStore.shareObjectKey"
+      :size="statusStore.shareSize"
+      :expires-at="statusStore.shareExpiresAt"
       @close="statusStore.closeShare()"
+      @expiry-saved="onExpirySaved"
     />
   </div>
 </template>
@@ -35,4 +39,12 @@ import ShareSheet from './components/ShareSheet.vue'
 import { useStatusStore } from './store/status'
 
 const statusStore = useStatusStore()
+
+function onExpirySaved(payload) {
+  if (payload && typeof payload === "object") {
+    statusStore.setFileExpiry(payload.key, payload.expiresAt)
+    return
+  }
+  statusStore.shareExpiresAt = payload ?? null
+}
 </script>

@@ -1,4 +1,6 @@
 import { _res } from "../utils/response.js";
+import { isExpired, parseExpiresAt } from "../src/utils/expiry.js";
+import { lookupExpiryByTarget, putShortLinkRecord } from "./expiryKv.js";
 import {
   normalizeSlug,
   slugKey,
@@ -55,6 +57,10 @@ export default async function (req, env) {
       if (!found) {
         return _res.json({ slug, target: null }, 404);
       }
+      const meta = await lookupExpiryByTarget(store, found);
+      if (isExpired(meta?.expiresAt)) {
+        return _res.json({ slug, target: null, expired: true }, 404);
+      }
       return _res.json({ slug, target: found });
     }
 
@@ -95,10 +101,23 @@ export default async function (req, env) {
       await store.delete(slugKey(previousSlug));
     }
 
-    await store.put(slugKey(slug), target);
-    await store.put(targetKey(target), slug);
+    let expiresAt;
+    if (Object.prototype.hasOwnProperty.call(body, "expiresAt")) {
+      expiresAt = parseExpiresAt(body.expiresAt);
+    } else {
+      const meta = await lookupExpiryByTarget(store, target);
+      expiresAt = parseExpiresAt(meta?.expiresAt);
+    }
+    if (isExpired(expiresAt)) {
+      return _res.json(
+        { error: "expired", message: "This file has expired." },
+        410,
+      );
+    }
 
-    return _res.json({ slug, target });
+    await putShortLinkRecord(store, slug, target, expiresAt);
+
+    return _res.json({ slug, target, expiresAt });
   }
 
   if (method === "DELETE") {

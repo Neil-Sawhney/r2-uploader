@@ -148,3 +148,21 @@ npx wrangler kv namespace create SHORT_LINKS
 Paste the printed `id` into `wrangler.json` `kv_namespaces[0].id` and redeploy.
 
 Reserved slugs are rejected: `api`, `setup-guide`, `assets`, and other app paths. Slugs are lowercase letters, numbers, and hyphens.
+
+## File expiry and pruning
+
+Uploads can expire after **1 minute**, **1 hour**, **24 hours**, **1 week**, **1 month**, or **never** (default). Expiry is also editable later from Share / QR.
+
+Metadata lives in the same `SHORT_LINKS` KV namespace (`e:obj:…`, `e:url:…`, `e:idx`). That index is a small JSON list of files that actually expire, so prune does **not** list the whole bucket or scan KV forever.
+
+Cloudflare Workers only run on requests or cron, not continuously:
+
+1. **SPA load** — File List calls `POST /api/prune` in the background (no popup, no spinner). The Worker revokes short links for expired objects, then the SPA deletes those R2 objects with the same LocalStorage endpoint + API key used by the Delete button. Failed R2 deletes are retried on the next visit.
+2. **Request `waitUntil`** — document navigations, short-link hits, and other `/api/*` routes schedule a throttled prune (at most once a minute) without blocking the response.
+3. **Cron (hourly)** — `wrangler.json` `triggers.crons` is `0 * * * *`. This keeps short links dead even when nobody opens the app. Cron cannot delete R2 objects: this Worker does not bind the user’s bucket or store their API key.
+
+If Git / Workers Builds does not attach the schedule, add it in the dashboard: **r2-uploader → Settings → Triggers → Cron Triggers** → `0 * * * *`.
+
+Expired short links also 410 at request time if the slug still exists. After prune deletes the KV slug, the path falls through to the SPA.
+
+`never` files are omitted from the expiry index so they are easy to find with **Show → Never expire** (then Selection Mode for bulk delete).
